@@ -1,0 +1,14 @@
+{
+  "name": "workwizzle",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/thankyouthatscool/workwizzle.git",
+  "author": "thankyouthatscool <85291297+thankyouthatscool@users.noreply.github.com>",
+  "license": "MIT",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "apps/*"
+    ]
+  }
+}
