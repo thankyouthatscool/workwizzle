@@ -6,7 +6,7 @@ import { useAppSelector } from "@hooks";
 import { HomeScreen } from "@screens/HomeScreen";
 import { TouchedDateScreen } from "@screens/TouchedDateScreen";
 import type { HomeScreenStackProps } from "@types";
-import { createDefaultTableSQLString } from "@utils";
+import { createDefaultTableSQLString, dropDefaultTableSQLString } from "@utils";
 
 const HomeScreenStack = createNativeStackNavigator<HomeScreenStackProps>();
 
@@ -16,6 +16,7 @@ export const AppRoot = () => {
   const handleInitialLoad = useCallback(() => {
     db.transaction(
       (tx) => {
+        // tx.executeSql(dropDefaultTableSQLString);
         tx.executeSql(createDefaultTableSQLString, []);
       },
       (err) => {

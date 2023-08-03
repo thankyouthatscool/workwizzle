@@ -1,13 +1,15 @@
 import { useNavigation } from "@react-navigation/native";
-import { type FC, useEffect, useState } from "react";
+import { type FC, useEffect, useState, useCallback } from "react";
 import { View } from "react-native";
-import { IconButton, Text, TextInput } from "react-native-paper";
+import { Button, IconButton, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAppDispatch, useAppSelector } from "@hooks";
 import { setTouchedDateInformation } from "@store";
 import { DEFAULT_APP_PADDING } from "@theme";
 import { DbMonthData } from "@types";
+
+import { ButtonWrapper, StartEndTimeWrapper } from "./Styled";
 
 export const TouchedDateScreen = () => {
   const dispatch = useAppDispatch();
@@ -25,24 +27,82 @@ export const TouchedDateScreen = () => {
     touchedDateInformation,
   } = useAppSelector(({ app }) => app);
 
+  const { goBack } = useNavigation();
+
+  const [dayData, setDayData] = useState<DbMonthData | undefined>(undefined);
   const [formData, setFormData] = useState<{
     comment: string;
-    hourlyRate: string;
+    hourlyRate: string[];
     hoursWorked: string[];
   }>({
     comment: DEFAULT_COMMENT,
-    hourlyRate: DEFAULT_HOURLY_RATE,
+    hourlyRate: [DEFAULT_HOURLY_RATE],
     hoursWorked: [DEFAULT_DAILY_HOURS],
   });
+  const [isStartEndCollapsed, setIsStartEndCollapsed] = useState<boolean>(
+    () => false
+  );
+  const [isUpdateNeeded, setIsUpdateNeeded] = useState<boolean>(() => false);
 
-  useEffect(() => {
+  const handleSaveDayData = useCallback(() => {
+    const { comment, hourlyRate, hoursWorked } = formData;
+
+    const { TOUCHED_DATE, TOUCHED_MONTH, TOUCHED_YEAR } =
+      touchedDateInformation!;
+
     db.transaction(
       (tx) => {
         tx.executeSql(
-          "SELECT * FROM dayTracker",
-          [],
+          `
+            INSERT INTO dayTracker
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (dayId) DO UPDATE SET
+              monthId = excluded.monthId,
+              hoursWorked = excluded.hoursWorked,
+              hourlyRate = excluded.hourlyRate,
+              startTime = excluded.startTime,
+              endTime = excluded.endTime,
+              comment = excluded.comment
+        `,
+          [
+            `${TOUCHED_DATE}-${TOUCHED_MONTH}-${TOUCHED_YEAR}`,
+            `${TOUCHED_MONTH}-${TOUCHED_YEAR}`,
+            hoursWorked[0],
+            hourlyRate[0],
+            null,
+            null,
+            comment,
+          ],
           (_, { rows: { _array } }) => {
             console.log(_array);
+          }
+        );
+      },
+      (err) => {
+        console.log(err);
+      },
+      () => {
+        goBack();
+      }
+    );
+
+    setIsUpdateNeeded(() => false);
+  }, [formData, touchedDateInformation]);
+
+  useEffect(() => {
+    const { TOUCHED_DATE, TOUCHED_MONTH, TOUCHED_YEAR } =
+      touchedDateInformation!;
+
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          `
+            SELECT * FROM dayTracker
+            WHERE dayId = ?
+          `,
+          [`${TOUCHED_DATE}-${TOUCHED_MONTH}-${TOUCHED_YEAR}`],
+          (_, { rows: { _array } }) => {
+            setDayData(() => _array[0]);
           }
         );
       },
@@ -53,6 +113,16 @@ export const TouchedDateScreen = () => {
     );
   }, []);
 
+  useEffect(() => {
+    if (!!dayData) {
+      setFormData(() => ({
+        comment: dayData.comment,
+        hourlyRate: [dayData.hourlyRate.toString()],
+        hoursWorked: [dayData.hoursWorked.toString()],
+      }));
+    }
+  }, [dayData]);
+
   return (
     <SafeAreaView>
       <ScreenHeader
@@ -60,6 +130,31 @@ export const TouchedDateScreen = () => {
           dispatch(setTouchedDateInformation(null));
         }}
       />
+      <StartEndTimeWrapper>
+        <View
+          style={{
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text variant="titleLarge">Record Start/End Time</Text>
+          <IconButton
+            icon={`chevron-${isStartEndCollapsed ? "up" : "down"}`}
+            mode="contained"
+            onPress={() => {
+              setIsStartEndCollapsed(
+                (isStartEndCollapsed) => !isStartEndCollapsed
+              );
+            }}
+          />
+        </View>
+        {isStartEndCollapsed && (
+          <View>
+            <Text>Something else go here...</Text>
+          </View>
+        )}
+      </StartEndTimeWrapper>
       <View style={{ flexDirection: "row" }}>
         <TextInput
           contextMenuHidden
@@ -67,6 +162,8 @@ export const TouchedDateScreen = () => {
           label="Hours Worked"
           mode="outlined"
           onChangeText={(newHoursWorked) => {
+            setIsUpdateNeeded(() => true);
+
             setFormData((formData) => ({
               ...formData,
               hoursWorked: [newHoursWorked],
@@ -91,13 +188,21 @@ export const TouchedDateScreen = () => {
           keyboardType="numeric"
           label="Hourly Rate"
           mode="outlined"
+          onChangeText={(newHourlyRate) => {
+            setIsUpdateNeeded(() => true);
+
+            setFormData((formData) => ({
+              ...formData,
+              hourlyRate: [newHourlyRate],
+            }));
+          }}
           left={<TextInput.Affix text="$" />}
           style={{
             flex: 1,
             marginLeft: DEFAULT_APP_PADDING / 2,
             marginRight: DEFAULT_APP_PADDING,
           }}
-          value={formData.hourlyRate}
+          value={formData.hourlyRate[0].toString()}
         />
       </View>
       <TextInput
@@ -106,11 +211,25 @@ export const TouchedDateScreen = () => {
         multiline
         numberOfLines={4}
         onChangeText={(newDayComment) => {
-          setFormData((formData) => ({ ...formData, comment: newDayComment }));
+          setIsUpdateNeeded(() => true);
+
+          setFormData((formData) => ({
+            ...formData,
+            comment: newDayComment,
+          }));
         }}
         style={{ marginHorizontal: DEFAULT_APP_PADDING }}
         value={formData.comment}
       />
+      <ButtonWrapper>
+        <Button
+          disabled={!isUpdateNeeded}
+          mode="contained"
+          onPress={handleSaveDayData}
+        >
+          Save
+        </Button>
+      </ButtonWrapper>
     </SafeAreaView>
   );
 };
