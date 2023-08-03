@@ -77,3 +77,40 @@ export const weekDayNameLookup = (dayNumber: number) => {
     "Saturday",
   ][dayNumber];
 };
+
+export const formatMilliseconds = (duration: number) => {
+  const seconds = Math.floor((duration / 1000) % 60);
+  const minutes = Math.floor((duration / (1000 * 60)) % 60);
+  const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+  if (!!hours && !!minutes && !!seconds) {
+    return `: ${hours} hour(s), ${minutes} minute(s), and ${seconds} second(s)`;
+  }
+
+  if (!!hours && !!minutes) {
+    return `: ${hours} hour(s) and ${minutes} minute(s)`;
+  }
+
+  if (!!hours && !!seconds) {
+    return `: ${hours} hour(s) and ${seconds} second(s)`;
+  }
+
+  if (!!minutes && !!seconds) {
+    return `: ${minutes} minute(s) and ${seconds} second(s)`;
+  }
+
+  return `: ${seconds} second(s)`;
+};
+
+export const getDurationInHours = (duration: number) => {
+  const minutes = Math.floor((duration / (1000 * 60)) % 60);
+  const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+  const formattedMinutesFraction = Math.round((minutes / 60) * 100) / 100;
+
+  if (!!formattedMinutesFraction) {
+    return [`${hours}${formattedMinutesFraction.toString().slice(1)}`];
+  }
+
+  return [`${hours}`];
+};
