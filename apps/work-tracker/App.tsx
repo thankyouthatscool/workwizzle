@@ -4,18 +4,18 @@ import { PaperProvider } from "react-native-paper";
 import { Provider as ReduxProvider } from "react-redux";
 
 import { AppRoot } from "@components";
-// import { store } from "@store";
+import { store } from "@store";
 
 export const App = () => {
   return (
-    // <ReduxProvider store={store}>
-    <PaperProvider>
-      <View style={styles.container}>
-        <StatusBar style="auto" />
-        <AppRoot />
-      </View>
-    </PaperProvider>
-    // </ReduxProvider>
+    <ReduxProvider store={store}>
+      <PaperProvider>
+        <View style={styles.container}>
+          <StatusBar style="auto" />
+          <AppRoot />
+        </View>
+      </PaperProvider>
+    </ReduxProvider>
   );
 };
 

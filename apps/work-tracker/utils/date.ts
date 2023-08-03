@@ -1,10 +1,10 @@
 export const getCurrentDateInformation = () => {
   const dateInstance = new Date();
 
-  const CURRENT_YEAR = dateInstance.getFullYear();
+  const CURRENT_DATE = dateInstance.getDate();
   const CURRENT_MONTH = dateInstance.getMonth();
   const CURRENT_MONTH_LONG = monthNameLookup(CURRENT_MONTH);
-  const CURRENT_DATE = dateInstance.getDate();
+  const CURRENT_YEAR = dateInstance.getFullYear();
   const CURRENT_WEEK_DAY = dateInstance.getDay();
   const CURRENT_WEEK_DAY_LONG = weekDayNameLookup(CURRENT_WEEK_DAY);
   const CURRENT_MONTH_NUMBER_OF_DAYS = new Date(
@@ -45,6 +45,7 @@ export const getMonthInformation = (year: number, month: number) => {
     numberOfDays,
     firstDayIndex: firstDay,
     lastDayIndex: lastDay,
+    monthNameLong: monthNameLookup(month),
   };
 };
 
