@@ -172,20 +172,20 @@ export const TouchedDateScreen = () => {
     }
   }, [dayData]);
 
-  useEffect(() => {
-    if (!!formData.startTime && !!formData.endTime) {
-      console.log("Setting the hours worked automatically");
+  // useEffect(() => {
+  //   if (!!formData.startTime && !!formData.endTime) {
+  //     console.log("Setting the hours worked automatically");
 
-      const [startTime, endTime] = [formData.startTime, formData.endTime];
+  //     const [startTime, endTime] = [formData.startTime, formData.endTime];
 
-      setFormData((formData) => ({
-        ...formData,
-        hoursWorked: getDurationInHours(
-          new Date(endTime).getTime() - new Date(startTime).getTime()
-        ),
-      }));
-    }
-  }, [formData.startTime, formData.endTime]);
+  //     setFormData((formData) => ({
+  //       ...formData,
+  //       hoursWorked: getDurationInHours(
+  //         new Date(endTime).getTime() - new Date(startTime).getTime()
+  //       ),
+  //     }));
+  //   }
+  // }, [formData.startTime, formData.endTime]);
 
   return (
     <SafeAreaView>

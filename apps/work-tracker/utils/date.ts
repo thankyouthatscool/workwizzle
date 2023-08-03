@@ -109,7 +109,7 @@ export const getDurationInHours = (duration: number) => {
   const formattedMinutesFraction = Math.round((minutes / 60) * 100) / 100;
 
   if (!!formattedMinutesFraction) {
-    return [`${hours}${formattedMinutesFraction.toString().slice(1)}`];
+    return [`${hours + formattedMinutesFraction}`];
   }
 
   return [`${hours}`];
