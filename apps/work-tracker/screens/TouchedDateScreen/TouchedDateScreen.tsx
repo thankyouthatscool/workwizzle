@@ -173,6 +173,8 @@ export const TouchedDateScreen = () => {
   }, [dayData]);
 
   // useEffect(() => {
+  // TODO: Throw up a toast to see if you want to calculate the hours worked automatically.
+  // TODO: Have this triggered by the button press, rather than by this effect here.
   //   if (!!formData.startTime && !!formData.endTime) {
   //     console.log("Setting the hours worked automatically");
 
