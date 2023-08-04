@@ -7,9 +7,10 @@ export const ButtonWrapper: FC<PropsWithChildren> = ({ children }) => {
   return (
     <View
       style={{
+        alignItems: "center",
         margin: DEFAULT_APP_PADDING,
         flexDirection: "row",
-        justifyContent: "flex-end",
+        justifyContent: "space-between",
       }}
     >
       {children}

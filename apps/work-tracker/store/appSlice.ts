@@ -3,12 +3,18 @@ import { createSlice } from "@reduxjs/toolkit";
 import * as SQLite from "expo-sqlite";
 
 import {
+  DEFAULT_BREAK_DURATION,
   DEFAULT_COMMENT,
   DEFAULT_DAILY_HOURS,
   DEFAULT_HOURLY_RATE,
   DEFAULT_WEEKLY_HOURS,
 } from "@constants";
-import { AppDefaults, AppState, TouchedDateInformation } from "@types";
+import {
+  AppDefaults,
+  AppState,
+  DbMonthData,
+  TouchedDateInformation,
+} from "@types";
 import { getCurrentDateInformation } from "@utils";
 
 const {
@@ -26,6 +32,7 @@ const {
 const initialState: AppState = {
   appSettings: {
     appDefaults: {
+      DEFAULT_BREAK_DURATION,
       DEFAULT_COMMENT,
       DEFAULT_HOURLY_RATE,
       DEFAULT_DAILY_HOURS,
@@ -62,6 +69,11 @@ export const appSlice = createSlice({
       state.appSettings.appDefaults = payload;
     },
 
+    // DB Month Data
+    setDbMonthData: (state, { payload }: PayloadAction<DbMonthData[]>) => {
+      state.dbMonthData = payload;
+    },
+
     // Touched Date Information
     setTouchedDateInformation: (
       state,
@@ -75,6 +87,9 @@ export const appSlice = createSlice({
 export const {
   // App Defaults
   setAppDefaults,
+
+  // DB Month Data
+  setDbMonthData,
 
   // Touched Date Information
   setTouchedDateInformation,

@@ -1,6 +1,7 @@
 import * as SQLite from "expo-sqlite";
 
 export type AppDefaults = {
+  DEFAULT_BREAK_DURATION: string;
   DEFAULT_COMMENT: string;
   DEFAULT_HOURLY_RATE: string;
   DEFAULT_DAILY_HOURS: string;

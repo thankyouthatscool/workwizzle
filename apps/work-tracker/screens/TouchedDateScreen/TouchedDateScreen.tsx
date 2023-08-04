@@ -2,11 +2,17 @@ import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useEffect, useState, type FC } from "react";
 import { View } from "react-native";
-import { Button, IconButton, Text, TextInput } from "react-native-paper";
+import {
+  Button,
+  IconButton,
+  Snackbar,
+  Text,
+  TextInput,
+} from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAppDispatch, useAppSelector } from "@hooks";
-import { setTouchedDateInformation } from "@store";
+import { setDbMonthData, setTouchedDateInformation } from "@store";
 import { DEFAULT_APP_PADDING } from "@theme";
 import { DbMonthData } from "@types";
 
@@ -26,6 +32,7 @@ export const TouchedDateScreen = () => {
       },
     },
     databaseInstance: db,
+    selectedDateInformation: { SELECTED_DATE, SELECTED_MONTH, SELECTED_YEAR },
     touchedDateInformation,
   } = useAppSelector(({ app }) => app);
 
@@ -45,13 +52,13 @@ export const TouchedDateScreen = () => {
     startTime: null,
     endTime: null,
   });
+  const [isShowSnack, setIsShowSnack] = useState<boolean>(false);
   const [isStartEndCollapsed, setIsStartEndCollapsed] = useState<boolean>(
     () => false
   );
   const [isUpdateNeeded, setIsUpdateNeeded] = useState<boolean>(() => false);
 
   // Callbacks
-
   const handleSaveDayData = useCallback(() => {
     const { comment, hourlyRate, hoursWorked } = formData;
 
@@ -70,8 +77,8 @@ export const TouchedDateScreen = () => {
               comment = excluded.comment
         `,
           [
-            `${touchedDateInformation?.TOUCHED_DATE}-${touchedDateInformation?.TOUCHED_MONTH}-${touchedDateInformation?.TOUCHED_YEAR}`,
-            `${touchedDateInformation?.TOUCHED_MONTH}-${touchedDateInformation?.TOUCHED_YEAR}`,
+            `${touchedDateInformation?.TOUCHED_DATE}/${touchedDateInformation?.TOUCHED_MONTH}/${touchedDateInformation?.TOUCHED_YEAR}`,
+            `${touchedDateInformation?.TOUCHED_MONTH}/${touchedDateInformation?.TOUCHED_YEAR}`,
             hoursWorked[0] || DEFAULT_DAILY_HOURS,
             hourlyRate[0] || DEFAULT_HOURLY_RATE,
             formData.startTime,
@@ -87,24 +94,53 @@ export const TouchedDateScreen = () => {
         console.log(err);
       },
       () => {
-        goBack();
+        db.transaction(
+          (tx) => {
+            tx.executeSql(
+              `
+                SELECT * FROM dayTracker
+                WHERE monthId = ?
+            `,
+              [`${SELECTED_MONTH}/${SELECTED_YEAR}`],
+              (_, { rows: { _array } }) => {
+                dispatch(setDbMonthData(_array));
+              }
+            );
+          },
+          (err) => console.log(err),
+          () => {
+            goBack();
+          }
+        );
       }
     );
 
     setIsUpdateNeeded(() => false);
-  }, [formData, touchedDateInformation]);
+  }, [formData, SELECTED_MONTH, SELECTED_YEAR, touchedDateInformation]);
 
   const handleSetNow = useCallback((type: "start" | "end") => {
     if (type === "start") {
-      setFormData((formData) => ({
-        ...formData,
-        startTime: new Date().toISOString(),
-      }));
+      setFormData((formData) => {
+        if (!!formData.endTime) {
+          setIsShowSnack(() => true);
+        }
+
+        return {
+          ...formData,
+          startTime: new Date().toISOString(),
+        };
+      });
     } else {
-      setFormData((formData) => ({
-        ...formData,
-        endTime: new Date().toISOString(),
-      }));
+      setFormData((formData) => {
+        if (!!formData.startTime) {
+          setIsShowSnack(() => true);
+        }
+
+        return {
+          ...formData,
+          endTime: new Date().toISOString(),
+        };
+      });
     }
 
     setIsUpdateNeeded(() => true);
@@ -119,15 +155,27 @@ export const TouchedDateScreen = () => {
           setIsUpdateNeeded(() => true);
 
           if (type === "start") {
-            setFormData((formData) => ({
-              ...formData,
-              startTime: timeData?.toISOString() || null,
-            }));
+            setFormData((formData) => {
+              if (!!formData.endTime) {
+                setIsShowSnack(() => true);
+              }
+
+              return {
+                ...formData,
+                startTime: timeData?.toISOString() || null,
+              };
+            });
           } else {
-            setFormData((formData) => ({
-              ...formData,
-              endTime: timeData?.toISOString() || null,
-            }));
+            setFormData((formData) => {
+              if (!!formData.startTime) {
+                setIsShowSnack(() => true);
+              }
+
+              return {
+                ...formData,
+                endTime: timeData?.toISOString() || null,
+              };
+            });
           }
         }
       },
@@ -135,8 +183,44 @@ export const TouchedDateScreen = () => {
     });
   }, []);
 
-  // Effects
+  const handleClear = useCallback((date: string) => {
+    console.log(date);
 
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          `
+            DELETE FROM dayTracker
+            WHERE dayId = ?
+        `,
+          [date]
+        );
+      },
+      (err) => console.log(err),
+      () => {
+        db.transaction(
+          (tx) => {
+            tx.executeSql(
+              `
+                SELECT * FROM dayTracker
+                WHERE monthId = ?
+            `,
+              [`${SELECTED_MONTH}/${SELECTED_YEAR}`],
+              (_, { rows: { _array } }) => {
+                dispatch(setDbMonthData(_array));
+              }
+            );
+          },
+          (err) => console.log(err),
+          () => {
+            goBack();
+          }
+        );
+      }
+    );
+  }, []);
+
+  // Effects
   useEffect(() => {
     db.transaction(
       (tx) => {
@@ -172,25 +256,8 @@ export const TouchedDateScreen = () => {
     }
   }, [dayData]);
 
-  // useEffect(() => {
-  // TODO: Throw up a toast to see if you want to calculate the hours worked automatically.
-  // TODO: Have this triggered by the button press, rather than by this effect here.
-  //   if (!!formData.startTime && !!formData.endTime) {
-  //     console.log("Setting the hours worked automatically");
-
-  //     const [startTime, endTime] = [formData.startTime, formData.endTime];
-
-  //     setFormData((formData) => ({
-  //       ...formData,
-  //       hoursWorked: getDurationInHours(
-  //         new Date(endTime).getTime() - new Date(startTime).getTime()
-  //       ),
-  //     }));
-  //   }
-  // }, [formData.startTime, formData.endTime]);
-
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ height: "100%" }}>
       <ScreenHeader
         onBackCallback={() => {
           dispatch(setTouchedDateInformation(null));
@@ -219,7 +286,10 @@ export const TouchedDateScreen = () => {
           <View>
             {!!formData.startTime && !!formData.endTime && (
               <View>
-                <Text>
+                <Text
+                  style={{ marginBottom: DEFAULT_APP_PADDING }}
+                  variant="titleSmall"
+                >
                   Hours Worked
                   {formatMilliseconds(
                     new Date(formData.endTime).getTime() -
@@ -360,14 +430,65 @@ export const TouchedDateScreen = () => {
         value={formData.comment}
       />
       <ButtonWrapper>
-        <Button
-          disabled={!isUpdateNeeded}
+        <IconButton
+          icon="delete"
+          iconColor="red"
           mode="contained"
-          onPress={handleSaveDayData}
-        >
-          Save
-        </Button>
+          onPress={() => {
+            handleClear(
+              `${touchedDateInformation?.TOUCHED_DATE}/${touchedDateInformation?.TOUCHED_MONTH}/${touchedDateInformation?.TOUCHED_YEAR}`
+            );
+          }}
+        />
+        <View style={{ flexDirection: "row" }}>
+          <Button
+            mode="contained-tonal"
+            onPress={() => goBack()}
+            style={{ marginRight: DEFAULT_APP_PADDING }}
+          >
+            Cancel
+          </Button>
+          <Button
+            disabled={
+              (!formData.startTime && !!formData.endTime) ||
+              (!!formData.startTime && !formData.endTime)
+            }
+            mode="contained"
+            onPress={handleSaveDayData}
+          >
+            Save
+          </Button>
+        </View>
       </ButtonWrapper>
+      <Snackbar
+        action={{
+          label: "Set Hours Worked",
+          onPress: () => {
+            setFormData((formData) => {
+              if (!!formData.startTime && !!formData.endTime) {
+                const startTime = formData.startTime;
+                const endTime = formData.endTime;
+
+                return {
+                  ...formData,
+                  hoursWorked: getDurationInHours(
+                    new Date(endTime).getTime() - new Date(startTime).getTime()
+                  ),
+                };
+              }
+
+              return formData;
+            });
+          },
+        }}
+        onDismiss={() => {
+          setIsShowSnack(() => false);
+        }}
+        style={{ bottom: 0, position: "absolute" }}
+        visible={isShowSnack}
+      >
+        Set hours worked
+      </Snackbar>
     </SafeAreaView>
   );
 };

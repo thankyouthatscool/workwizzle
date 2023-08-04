@@ -4,7 +4,7 @@ import { Dimensions, Pressable, View } from "react-native";
 import { Text } from "react-native-paper";
 
 import { useAppDispatch, useAppSelector } from "@hooks";
-import { setTouchedDateInformation } from "@store";
+import { setDbMonthData, setTouchedDateInformation } from "@store";
 import { colors, DEFAULT_APP_PADDING } from "@theme";
 import { MonthCarouselNavProps } from "@types";
 import { getMonthInformation } from "@utils";
@@ -23,6 +23,7 @@ export const MonthCarousel: FC<{ nav: MonthCarouselNavProps }> = ({
       appDefaults: { DEFAULT_DAILY_HOURS },
     },
     currentDateInformation: { CURRENT_DATE, CURRENT_MONTH, CURRENT_YEAR },
+    databaseInstance: db,
     dbMonthData,
     selectedDateInformation: { SELECTED_MONTH, SELECTED_YEAR },
     touchedDateInformation,
@@ -31,6 +32,28 @@ export const MonthCarousel: FC<{ nav: MonthCarouselNavProps }> = ({
   const [selectedMonthInformation, setSelectedMonthInformation] = useState<
     ReturnType<typeof getMonthInformation>
   >(() => getMonthInformation(SELECTED_YEAR, SELECTED_MONTH));
+
+  // Effects
+  useEffect(() => {
+    if (!!SELECTED_MONTH && !!SELECTED_YEAR) {
+      db.transaction(
+        (tx) => {
+          tx.executeSql(
+            `
+              SELECT * FROM dayTracker
+              WHERE monthId = ?
+          `,
+            [`${SELECTED_MONTH}/${SELECTED_YEAR}`],
+            (_, { rows: { _array } }) => {
+              dispatch(setDbMonthData(_array));
+            }
+          );
+        },
+        (err) => console.log(err),
+        () => {}
+      );
+    }
+  }, [SELECTED_MONTH, SELECTED_YEAR]);
 
   useEffect(() => {
     setSelectedMonthInformation(() =>
@@ -113,25 +136,35 @@ export const MonthCarousel: FC<{ nav: MonthCarouselNavProps }> = ({
               <View
                 style={{
                   alignItems: "center",
-                  backgroundColor: !!dbMonthData.find(
-                    (record) =>
+                  // backgroundColor: !!dbMonthData.find(
+                  //   (record) =>
+                  //     record.dayId ===
+                  //     `${
+                  //       idx + 1 - selectedMonthInformation.firstDayIndex
+                  //     }/${SELECTED_MONTH}/${SELECTED_YEAR}`
+                  // )
+                  //   ? dbMonthData
+                  //       .find(
+                  //         (record) =>
+                  //           record.dayId ===
+                  //           `${
+                  //             idx + 1 - selectedMonthInformation.firstDayIndex
+                  //           }/${SELECTED_MONTH}/${SELECTED_YEAR}`
+                  //       )
+                  //       ?.hoursWorked.reduce((acc, val) => acc + val, 0) !==
+                  //     parseInt(DEFAULT_DAILY_HOURS)
+                  //     ? colors.artisanGold
+                  //     : colors.walledGreen
+                  //   : "white",
+                  backgroundColor: dbMonthData.find((record) => {
+                    return (
                       record.dayId ===
                       `${
                         idx + 1 - selectedMonthInformation.firstDayIndex
                       }/${SELECTED_MONTH}/${SELECTED_YEAR}`
-                  )
-                    ? dbMonthData
-                        .find(
-                          (record) =>
-                            record.dayId ===
-                            `${
-                              idx + 1 - selectedMonthInformation.firstDayIndex
-                            }/${SELECTED_MONTH}/${SELECTED_YEAR}`
-                        )
-                        ?.hoursWorked.reduce((acc, val) => acc + val, 0) !==
-                      parseInt(DEFAULT_DAILY_HOURS)
-                      ? colors.artisanGold
-                      : colors.walledGreen
+                    );
+                  })
+                    ? colors.artisanGold
                     : "white",
                   borderRadius: 50,
                   borderColor:
@@ -148,6 +181,16 @@ export const MonthCarousel: FC<{ nav: MonthCarouselNavProps }> = ({
                     `${CURRENT_DATE}/${CURRENT_MONTH}/${CURRENT_YEAR}`
                       ? 2
                       : 1,
+                  elevation: dbMonthData.find((record) => {
+                    return (
+                      record.dayId ===
+                      `${
+                        idx + 1 - selectedMonthInformation.firstDayIndex
+                      }/${SELECTED_MONTH}/${SELECTED_YEAR}`
+                    );
+                  })
+                    ? 20
+                    : 0,
                   height: WINDOW_WIDTH / 7,
                   justifyContent: "center",
                   width: WINDOW_WIDTH / 7,
