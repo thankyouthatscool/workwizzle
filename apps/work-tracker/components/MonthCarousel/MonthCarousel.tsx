@@ -19,9 +19,6 @@ export const MonthCarousel: FC<{ nav: MonthCarouselNavProps }> = ({
   const dispatch = useAppDispatch();
 
   const {
-    appSettings: {
-      appDefaults: { DEFAULT_DAILY_HOURS },
-    },
     currentDateInformation: { CURRENT_DATE, CURRENT_MONTH, CURRENT_YEAR },
     databaseInstance: db,
     dbMonthData,
@@ -61,8 +58,16 @@ export const MonthCarousel: FC<{ nav: MonthCarouselNavProps }> = ({
     );
   }, [SELECTED_MONTH, SELECTED_YEAR]);
 
+  useEffect(() => {
+    console.log(SELECTED_MONTH);
+    console.log(SELECTED_YEAR);
+  }, [SELECTED_MONTH, SELECTED_YEAR]);
+
   return (
     <MainWrapper>
+      <Text>
+        {SELECTED_MONTH}/{SELECTED_YEAR}
+      </Text>
       <WeekdayHeaderWrapper>
         {["M", "T", "W", "T", "F", "S", "S"].map((letter, idx) => (
           <View

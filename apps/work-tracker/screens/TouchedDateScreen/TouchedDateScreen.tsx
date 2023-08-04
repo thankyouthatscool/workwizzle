@@ -32,7 +32,7 @@ export const TouchedDateScreen = () => {
       },
     },
     databaseInstance: db,
-    selectedDateInformation: { SELECTED_DATE, SELECTED_MONTH, SELECTED_YEAR },
+
     touchedDateInformation,
   } = useAppSelector(({ app }) => app);
 
@@ -101,7 +101,9 @@ export const TouchedDateScreen = () => {
                 SELECT * FROM dayTracker
                 WHERE monthId = ?
             `,
-              [`${SELECTED_MONTH}/${SELECTED_YEAR}`],
+              [
+                `${touchedDateInformation?.TOUCHED_MONTH}/${touchedDateInformation?.TOUCHED_YEAR}`,
+              ],
               (_, { rows: { _array } }) => {
                 dispatch(setDbMonthData(_array));
               }
@@ -116,7 +118,7 @@ export const TouchedDateScreen = () => {
     );
 
     setIsUpdateNeeded(() => false);
-  }, [formData, SELECTED_MONTH, SELECTED_YEAR, touchedDateInformation]);
+  }, [formData, touchedDateInformation]);
 
   const handleSetNow = useCallback((type: "start" | "end") => {
     if (type === "start") {
@@ -183,42 +185,47 @@ export const TouchedDateScreen = () => {
     });
   }, []);
 
-  const handleClear = useCallback((date: string) => {
-    console.log(date);
+  const handleClear = useCallback(
+    (date: string) => {
+      console.log(date);
 
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          `
+      db.transaction(
+        (tx) => {
+          tx.executeSql(
+            `
             DELETE FROM dayTracker
             WHERE dayId = ?
         `,
-          [date]
-        );
-      },
-      (err) => console.log(err),
-      () => {
-        db.transaction(
-          (tx) => {
-            tx.executeSql(
-              `
+            [date]
+          );
+        },
+        (err) => console.log(err),
+        () => {
+          db.transaction(
+            (tx) => {
+              tx.executeSql(
+                `
                 SELECT * FROM dayTracker
                 WHERE monthId = ?
             `,
-              [`${SELECTED_MONTH}/${SELECTED_YEAR}`],
-              (_, { rows: { _array } }) => {
-                dispatch(setDbMonthData(_array));
-              }
-            );
-          },
-          (err) => console.log(err),
-          () => {
-            goBack();
-          }
-        );
-      }
-    );
-  }, []);
+                [
+                  `${touchedDateInformation?.TOUCHED_MONTH}/${touchedDateInformation?.TOUCHED_YEAR}`,
+                ],
+                (_, { rows: { _array } }) => {
+                  dispatch(setDbMonthData(_array));
+                }
+              );
+            },
+            (err) => console.log(err),
+            () => {
+              goBack();
+            }
+          );
+        }
+      );
+    },
+    [touchedDateInformation]
+  );
 
   // Effects
   useEffect(() => {
@@ -263,6 +270,14 @@ export const TouchedDateScreen = () => {
           dispatch(setTouchedDateInformation(null));
         }}
       />
+      <Text
+        style={{ marginHorizontal: DEFAULT_APP_PADDING }}
+        variant="titleLarge"
+      >
+        {touchedDateInformation?.TOUCHED_DATE}/
+        {touchedDateInformation?.TOUCHED_MONTH}/
+        {touchedDateInformation?.TOUCHED_YEAR}
+      </Text>
       <StartEndTimeWrapper>
         <View
           style={{

@@ -12,7 +12,9 @@ import {
 import {
   AppDefaults,
   AppState,
+  CurrentDateInformation,
   DbMonthData,
+  SelectedDateInformation,
   TouchedDateInformation,
 } from "@types";
 import { getCurrentDateInformation } from "@utils";
@@ -74,6 +76,22 @@ export const appSlice = createSlice({
       state.dbMonthData = payload;
     },
 
+    // Current Date Information
+    setCurrentDateInformation: (
+      state,
+      { payload }: PayloadAction<CurrentDateInformation>
+    ) => {
+      state.currentDateInformation = payload;
+    },
+
+    // Selected Date Information
+    setSelectedDateInformation: (
+      state,
+      { payload }: PayloadAction<SelectedDateInformation>
+    ) => {
+      state.selectedDateInformation = payload;
+    },
+
     // Touched Date Information
     setTouchedDateInformation: (
       state,
@@ -90,6 +108,12 @@ export const {
 
   // DB Month Data
   setDbMonthData,
+
+  // Current Date Information
+  setCurrentDateInformation,
+
+  // Selected Date Information
+  setSelectedDateInformation,
 
   // Touched Date Information
   setTouchedDateInformation,
