@@ -35,6 +35,7 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
+          padding: 8,
         }}
       >
         <Button
