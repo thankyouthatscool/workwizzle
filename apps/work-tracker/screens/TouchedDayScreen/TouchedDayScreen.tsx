@@ -21,6 +21,7 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
     hourlyRate: "28",
     comment: "This is the default comment!",
   });
+  const [isDefaultData, setIsDefaultData] = useState<boolean>(false);
 
   const { databaseInstance: db, touchedDateInformation } = useAppSelector(
     ({ app }) => app
@@ -80,14 +81,10 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
         );
       }
     );
-
-    console.log(formData);
   }, [formData, touchedDateInformation]);
 
   // Effects
   useEffect(() => {
-    console.log("Getting the data...");
-
     db.transaction(
       (tx) => {
         tx.executeSql(
@@ -104,6 +101,8 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
             if (!!_array[0]) {
               setFormData(() => _array[0]);
             } else {
+              setIsDefaultData(() => true);
+
               setFormData(() => ({
                 hoursWorked: "8",
                 hourlyRate: "28",
@@ -177,6 +176,7 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
       </View>
       <ButtonWrapper>
         <IconButton
+          disabled={isDefaultData}
           iconColor="red"
           icon="delete"
           mode="contained"
@@ -189,6 +189,7 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
             onPress={() => {
               navigation.goBack();
             }}
+            style={{ paddingRight: DEFAULT_APP_PADDING }}
           >
             Cancel
           </Button>
