@@ -1,7 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import * as SQLite from "expo-sqlite";
 
-import type { AppSliceInitialState, SelectedDateInformation } from "@types";
+import type {
+  AppSliceInitialState,
+  SelectedDateInformation,
+  TouchedDateInformation,
+} from "@types";
 import { getCurrentDateInformation } from "@utils";
 
 const {
@@ -28,6 +32,7 @@ const initialState: AppSliceInitialState = {
     SELECTED_MONTH: CURRENT_MONTH,
     SELECTED_YEAR: CURRENT_YEAR,
   },
+  touchedDateInformation: null,
 };
 
 export const appSlice = createSlice({
@@ -41,10 +46,21 @@ export const appSlice = createSlice({
     ) => {
       state.selectedDateInformation = payload;
     },
+
+    // Touched Date Information
+    setTouchedDateInformation: (
+      state,
+      { payload }: PayloadAction<TouchedDateInformation>
+    ) => {
+      state.touchedDateInformation = payload;
+    },
   },
 });
 
 export const {
   // Selected Date Information
   setSelectedDateInformation,
+
+  // Touched Date Information
+  setTouchedDateInformation,
 } = appSlice.actions;

@@ -4,6 +4,7 @@ export type AppSliceInitialState = {
   currentDateInformation: CurrentDateInformation;
   databaseInstance: SQLite.SQLiteDatabase;
   selectedDateInformation: SelectedDateInformation;
+  touchedDateInformation: TouchedDateInformation;
 };
 
 export type CurrentDateInformation = {
@@ -20,3 +21,9 @@ export type SelectedDateInformation = {
   SELECTED_MONTH: number;
   SELECTED_YEAR: number;
 };
+
+export type TouchedDateInformation = {
+  TOUCHED_DATE: number;
+  TOUCHED_MONTH: number;
+  TOUCHED_YEAR: number;
+} | null;
