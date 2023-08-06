@@ -30,6 +30,8 @@ export type TouchedDateInformation = {
 } | null;
 
 export type DbMonthData = {
+  dayId: string;
+  monthId: string;
   hoursWorked: string;
   hourlyRate: string;
   comment: string;

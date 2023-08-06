@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAppDispatch, useAppSelector, useDateHooks } from "@hooks";
 import { COLORS, DEFAULT_APP_PADDING } from "@theme";
-import { setTouchedDateInformation } from "@store";
+import { setDbMonthData, setTouchedDateInformation } from "@store";
 import type { MonthCarouselScreenProps } from "@types";
 import { getMonthInformation, monthNameLookup } from "@utils";
 
@@ -26,6 +26,8 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
       CURRENT_MONTH_LONG,
       CURRENT_YEAR,
     },
+    databaseInstance: db,
+    dbMonthData,
     selectedDateInformation: { SELECTED_MONTH, SELECTED_YEAR },
   } = useAppSelector(({ app }) => app);
 
@@ -44,6 +46,27 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
     setSelectedMonthInformation(() =>
       getMonthInformation(SELECTED_YEAR, SELECTED_MONTH)
     );
+  }, [SELECTED_MONTH, SELECTED_YEAR]);
+
+  useEffect(() => {
+    if (!!SELECTED_MONTH && !!SELECTED_YEAR) {
+      db.transaction(
+        (tx) => {
+          tx.executeSql(
+            `
+              SELECT * FROM dayTracker
+              WHERE monthId = ?
+          `,
+            [`${monthNameLookup(SELECTED_MONTH)}-${SELECTED_YEAR}`],
+            (_, { rows: { _array } }) => {
+              dispatch(setDbMonthData(_array));
+            }
+          );
+        },
+        (err) => console.log(err),
+        () => {}
+      );
+    }
   }, [SELECTED_MONTH, SELECTED_YEAR]);
 
   return (
@@ -113,13 +136,54 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
                 }
               }}
               onLongPress={() => {
-                console.log(
-                  "This is the long press. Will probably just set the default data."
+                db.transaction(
+                  (tx) => {
+                    tx.executeSql(
+                      `
+                        INSERT INTO dayTracker
+                        VALUES ()
+                        ON CONFLICT (dayId) DO UPDATE SET
+                          monthId = excluded.monthId,
+                          
+                      `,
+                      [],
+                      () => {}
+                    );
+                  },
+                  (err) => console.log(err),
+                  () => {}
                 );
+
+                // console.log(
+                //   idx + 1 - firstDayIndex,
+                //   SELECTED_MONTH,
+                //   SELECTED_YEAR
+                // );
               }}
             >
               <View
                 style={{
+                  alignItems: "center",
+                  backgroundColor: !!dbMonthData.find(
+                    (record) =>
+                      record.dayId ===
+                      `${idx + 1 - firstDayIndex}-${monthNameLookup(
+                        SELECTED_MONTH
+                      )}-${SELECTED_YEAR}`
+                  )
+                    ? COLORS.artisanGold
+                    : "#00000000",
+                  borderRadius: 50,
+                  borderColor:
+                    `${
+                      idx + 1 - firstDayIndex
+                    }/${SELECTED_MONTH}/${SELECTED_YEAR}` ===
+                    `${CURRENT_DATE}/${CURRENT_MONTH}/${CURRENT_YEAR}`
+                      ? COLORS.walledGreen
+                      : "#00000000",
+                  borderWidth: 2,
+                  height: WINDOW_WIDTH / 7,
+                  justifyContent: "center",
                   width: WINDOW_WIDTH / 7,
                 }}
               >
@@ -128,21 +192,7 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
                 ) : (
                   <Text
                     style={{
-                      alignItems: "center",
-                      borderRadius: 50,
-                      borderColor:
-                        `${
-                          idx + 1 - firstDayIndex
-                        }/${SELECTED_MONTH}/${SELECTED_YEAR}` ===
-                        `${CURRENT_DATE}/${CURRENT_MONTH}/${CURRENT_YEAR}`
-                          ? "black"
-                          : "#00000000",
-                      borderWidth: 1,
                       fontWeight: "bold",
-                      justifyContent: "center",
-                      padding: DEFAULT_APP_PADDING * 2,
-                      width: WINDOW_WIDTH / 7,
-                      textAlign: "center",
                     }}
                   >
                     {idx + 1 - firstDayIndex}
