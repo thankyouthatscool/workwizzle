@@ -1,7 +1,13 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import * as SQLite from "expo-sqlite";
 
+import {
+  DEFAULT_COMMENT,
+  DEFAULT_DAILY_WORK_HOURS,
+  DEFAULT_HOURLY_RATE,
+} from "@constants";
 import type {
+  AppDefaults,
   AppSliceInitialState,
   DbMonthData,
   SelectedDateInformation,
@@ -19,6 +25,13 @@ const {
 } = getCurrentDateInformation();
 
 const initialState: AppSliceInitialState = {
+  appSettings: {
+    appDefaults: {
+      DEFAULT_COMMENT,
+      DEFAULT_DAILY_WORK_HOURS,
+      DEFAULT_HOURLY_RATE,
+    },
+  },
   currentDateInformation: {
     CURRENT_DATE,
     CURRENT_WEEK_DAY,
@@ -41,6 +54,11 @@ export const appSlice = createSlice({
   name: "app",
   initialState,
   reducers: {
+    // App Defaults
+    setAppDefaults: (state, { payload }: PayloadAction<AppDefaults>) => {
+      state.appSettings.appDefaults = payload;
+    },
+
     // DB Month  Data
     setDbMonthData: (state, { payload }: PayloadAction<DbMonthData[]>) => {
       state.dbMonthData = payload;
@@ -65,6 +83,9 @@ export const appSlice = createSlice({
 });
 
 export const {
+  // App Defaults
+  setAppDefaults,
+
   // Db Month Data
   setDbMonthData,
 

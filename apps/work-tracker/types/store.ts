@@ -1,6 +1,7 @@
 import * as SQLite from "expo-sqlite";
 
 export type AppSliceInitialState = {
+  appSettings: AppSettings;
   currentDateInformation: CurrentDateInformation;
   databaseInstance: SQLite.SQLiteDatabase;
   dbMonthData: DbMonthData[];
@@ -35,4 +36,14 @@ export type DbMonthData = {
   hoursWorked: string;
   hourlyRate: string;
   comment: string;
+};
+
+export type AppSettings = {
+  appDefaults: AppDefaults;
+};
+
+export type AppDefaults = {
+  DEFAULT_COMMENT: string;
+  DEFAULT_DAILY_WORK_HOURS: string;
+  DEFAULT_HOURLY_RATE: string;
 };

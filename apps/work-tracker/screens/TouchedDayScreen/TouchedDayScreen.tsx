@@ -15,11 +15,22 @@ import { ButtonWrapper } from "./Styled";
 export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
   const dispatch = useAppDispatch();
 
-  // State
+  // Hooks
+  const {
+    appSettings: {
+      appDefaults: {
+        DEFAULT_COMMENT,
+        DEFAULT_DAILY_WORK_HOURS,
+        DEFAULT_HOURLY_RATE,
+      },
+    },
+  } = useAppSelector(({ app }) => app);
+
+  // Local State
   const [formData, setFormData] = useState({
-    hoursWorked: "8",
-    hourlyRate: "28",
-    comment: "This is the default comment!",
+    hoursWorked: DEFAULT_DAILY_WORK_HOURS,
+    hourlyRate: DEFAULT_HOURLY_RATE,
+    comment: DEFAULT_COMMENT,
   });
   const [isDefaultData, setIsDefaultData] = useState<boolean>(false);
 
@@ -104,9 +115,9 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
               setIsDefaultData(() => true);
 
               setFormData(() => ({
-                hoursWorked: "8",
-                hourlyRate: "28",
-                comment: "This is the default comment!",
+                hoursWorked: DEFAULT_DAILY_WORK_HOURS,
+                hourlyRate: DEFAULT_HOURLY_RATE,
+                comment: DEFAULT_COMMENT,
               }));
             }
           }

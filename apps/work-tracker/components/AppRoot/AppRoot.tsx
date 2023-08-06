@@ -26,7 +26,10 @@ export const AppRoot = () => {
   }, []);
 
   return (
-    <DrawerStack.Navigator screenOptions={{ headerShown: false }}>
+    <DrawerStack.Navigator
+      initialRouteName="Settings"
+      screenOptions={{ headerShown: false }}
+    >
       <DrawerStack.Screen component={HomeScreen} name="Home" />
       <DrawerStack.Screen component={SettingsScreen} name="Settings" />
     </DrawerStack.Navigator>

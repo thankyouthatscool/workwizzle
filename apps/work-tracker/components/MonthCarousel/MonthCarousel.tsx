@@ -10,6 +10,11 @@ import type { MonthCarouselScreenProps } from "@types";
 import { getMonthInformation, monthNameLookup } from "@utils";
 
 import { CalendarWrapper, WeekdayWrapper } from "./Styled";
+import {
+  DEFAULT_COMMENT,
+  DEFAULT_DAILY_WORK_HOURS,
+  DEFAULT_HOURLY_RATE,
+} from "@constants";
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
 
@@ -136,29 +141,68 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
                 }
               }}
               onLongPress={() => {
-                db.transaction(
-                  (tx) => {
-                    tx.executeSql(
-                      `
-                        INSERT INTO dayTracker
-                        VALUES ()
-                        ON CONFLICT (dayId) DO UPDATE SET
-                          monthId = excluded.monthId,
-                          
-                      `,
-                      [],
-                      () => {}
-                    );
-                  },
-                  (err) => console.log(err),
-                  () => {}
-                );
+                if (
+                  idx + 1 - firstDayIndex > 0 &&
+                  idx + 1 - firstDayIndex <= numberOfDays
+                ) {
+                  console.log({
+                    TOUCHED_DATE: idx + 1 - firstDayIndex,
+                    TOUCHED_MONTH: SELECTED_MONTH,
+                    TOUCHED_YEAR: SELECTED_YEAR,
+                  });
 
-                // console.log(
-                //   idx + 1 - firstDayIndex,
-                //   SELECTED_MONTH,
-                //   SELECTED_YEAR
-                // );
+                  db.transaction(
+                    (tx) => {
+                      tx.executeSql(
+                        `
+                          INSERT INTO dayTracker
+                          VALUES (?, ?, ?, ?, ?, ?, ?)
+                          ON CONFLICT (dayId) DO UPDATE SET
+                            monthId = excluded.monthId,
+                            hoursWorked = excluded.hoursWorked,
+                            hourlyRate = excluded.hourlyRate,
+                            startTime = excluded.startTime,
+                            endTime = excluded.endTime,
+                            comment = excluded.comment
+                        `,
+                        [
+                          `${idx + 1 - firstDayIndex}-${monthNameLookup(
+                            SELECTED_MONTH
+                          )}-${SELECTED_YEAR}`,
+                          `${monthNameLookup(SELECTED_MONTH)}-${SELECTED_YEAR}`,
+                          DEFAULT_DAILY_WORK_HOURS,
+                          DEFAULT_HOURLY_RATE,
+                          "",
+                          "",
+                          DEFAULT_COMMENT,
+                        ]
+                      );
+                    },
+                    (err) => console.log(err),
+                    () => {
+                      db.transaction(
+                        (tx) => {
+                          tx.executeSql(
+                            `
+                              SELECT * FROM dayTracker
+                              WHERE monthId = ?
+                            `,
+                            [
+                              `${monthNameLookup(
+                                SELECTED_MONTH
+                              )}-${SELECTED_YEAR}`,
+                            ],
+                            (_, { rows: { _array } }) => {
+                              dispatch(setDbMonthData(_array));
+                            }
+                          );
+                        },
+                        (err) => console.log(err),
+                        () => {}
+                      );
+                    }
+                  );
+                }
               }}
             >
               <View
