@@ -112,7 +112,11 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
                   );
                 }
               }}
-              onLongPress={() => {}}
+              onLongPress={() => {
+                console.log(
+                  "This is the long press. Will probably just set the default data."
+                );
+              }}
             >
               <View
                 style={{

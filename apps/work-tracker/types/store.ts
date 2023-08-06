@@ -3,6 +3,7 @@ import * as SQLite from "expo-sqlite";
 export type AppSliceInitialState = {
   currentDateInformation: CurrentDateInformation;
   databaseInstance: SQLite.SQLiteDatabase;
+  dbMonthData: DbMonthData[];
   selectedDateInformation: SelectedDateInformation;
   touchedDateInformation: TouchedDateInformation;
 };
@@ -27,3 +28,9 @@ export type TouchedDateInformation = {
   TOUCHED_MONTH: number;
   TOUCHED_YEAR: number;
 } | null;
+
+export type DbMonthData = {
+  hoursWorked: string;
+  hourlyRate: string;
+  comment: string;
+};

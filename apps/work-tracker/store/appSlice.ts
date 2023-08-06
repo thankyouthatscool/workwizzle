@@ -3,6 +3,7 @@ import * as SQLite from "expo-sqlite";
 
 import type {
   AppSliceInitialState,
+  DbMonthData,
   SelectedDateInformation,
   TouchedDateInformation,
 } from "@types";
@@ -27,6 +28,7 @@ const initialState: AppSliceInitialState = {
     CURRENT_YEAR,
   },
   databaseInstance: SQLite.openDatabase("dayTracker.db"),
+  dbMonthData: [],
   selectedDateInformation: {
     SELECTED_DATE: CURRENT_DATE,
     SELECTED_MONTH: CURRENT_MONTH,
@@ -39,6 +41,11 @@ export const appSlice = createSlice({
   name: "app",
   initialState,
   reducers: {
+    // DB Month  Data
+    setDbMonthData: (state, { payload }: PayloadAction<DbMonthData[]>) => {
+      state.dbMonthData = payload;
+    },
+
     // Selected Date Information
     setSelectedDateInformation: (
       state,
@@ -58,6 +65,9 @@ export const appSlice = createSlice({
 });
 
 export const {
+  // Db Month Data
+  setDbMonthData,
+
   // Selected Date Information
   setSelectedDateInformation,
 

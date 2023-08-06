@@ -1,15 +1,20 @@
 import { useNavigation } from "@react-navigation/native";
-import { type FC, useEffect, useState } from "react";
+import { type FC, useCallback, useEffect, useState } from "react";
 import { View } from "react-native";
-import { IconButton, Text, TextInput } from "react-native-paper";
+import { Button, IconButton, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useAppSelector } from "@hooks";
+import { useAppDispatch, useAppSelector } from "@hooks";
+import { setDbMonthData } from "@store";
 import { DEFAULT_APP_PADDING } from "@theme";
 import { TouchedDayScreenProps } from "@types";
 import { monthNameLookup, weekDayNameLookup } from "@utils";
 
+import { ButtonWrapper } from "./Styled";
+
 export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
+  const dispatch = useAppDispatch();
+
   // State
   const [formData, setFormData] = useState({
     hoursWorked: "8",
@@ -21,9 +26,67 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
     ({ app }) => app
   );
 
+  // Handlers
+  const handleSaveData = useCallback(() => {
+    const { comment, hourlyRate, hoursWorked } = formData;
+
+    const dayId = `${touchedDateInformation?.TOUCHED_DATE}-${monthNameLookup(
+      touchedDateInformation?.TOUCHED_MONTH!
+    )}-${touchedDateInformation?.TOUCHED_YEAR}`;
+    const monthId = `${monthNameLookup(
+      touchedDateInformation?.TOUCHED_MONTH!
+    )}-${touchedDateInformation?.TOUCHED_YEAR}`;
+
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          `
+            INSERT INTO dayTracker
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (dayId) DO UPDATE SET
+              monthId = excluded.monthId,
+              hoursWorked = excluded.hoursWorked,
+              hourlyRate = excluded.hourlyRate,
+              startTime = excluded.startTime,
+              endTime = excluded.endTime,
+              comment = excluded.comment
+        `,
+          [dayId, monthId, hoursWorked, hourlyRate, "", "", comment]
+        );
+      },
+      (err) => console.log(err),
+      () => {
+        db.transaction(
+          (tx) => {
+            tx.executeSql(
+              `
+                SELECT * FROM dayTracker
+                WHERE monthId = ?
+            `,
+              [
+                `${monthNameLookup(touchedDateInformation?.TOUCHED_MONTH!)}-${
+                  touchedDateInformation?.TOUCHED_YEAR
+                }`,
+              ],
+              (_, { rows: { _array } }) => {
+                dispatch(setDbMonthData(_array));
+              }
+            );
+          },
+          (err) => console.log(err),
+          () => {
+            navigation.goBack();
+          }
+        );
+      }
+    );
+
+    console.log(formData);
+  }, [formData, touchedDateInformation]);
+
   // Effects
   useEffect(() => {
-    console.log("Getting all the things from the database...");
+    console.log("Getting the data...");
 
     db.transaction(
       (tx) => {
@@ -32,16 +95,26 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
             SELECT * FROM dayTracker
             WHERE dayId = ?
         `,
-          [],
+          [
+            `${touchedDateInformation?.TOUCHED_DATE}-${monthNameLookup(
+              touchedDateInformation?.TOUCHED_MONTH!
+            )}-${touchedDateInformation?.TOUCHED_YEAR}`,
+          ],
           (_, { rows: { _array } }) => {
-            console.log(_array);
+            if (!!_array[0]) {
+              setFormData(() => _array[0]);
+            } else {
+              setFormData(() => ({
+                hoursWorked: "8",
+                hourlyRate: "28",
+                comment: "This is the default comment!",
+              }));
+            }
           }
         );
       },
       (err) => console.log(err),
-      () => {
-        console.log("Done");
-      }
+      () => {}
     );
   }, []);
 
@@ -102,6 +175,33 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
           value={formData.comment}
         />
       </View>
+      <ButtonWrapper>
+        <IconButton
+          iconColor="red"
+          icon="delete"
+          mode="contained"
+          onPress={() => {
+            navigation.goBack();
+          }}
+        />
+        <View style={{ flexDirection: "row" }}>
+          <Button
+            onPress={() => {
+              navigation.goBack();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            mode="contained"
+            onPress={() => {
+              handleSaveData();
+            }}
+          >
+            Save
+          </Button>
+        </View>
+      </ButtonWrapper>
     </SafeAreaView>
   );
 };
