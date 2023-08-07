@@ -412,8 +412,40 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
           <Text variant="titleLarge">More Information</Text>
           <IconButton icon="chevron-down" mode="contained" />
         </View>
+        {true && <DataComponent />}
       </ScrollView>
     </SafeAreaView>
+  );
+};
+
+export const DataComponent = () => {
+  const [isWeekExpanded, setIsWeekExpanded] = useState<boolean>(false);
+
+  return (
+    <View style={{ paddingHorizontal: DEFAULT_APP_PADDING }}>
+      <Pressable
+        onPress={() => {
+          setIsWeekExpanded((isWeekExpanded) => !isWeekExpanded);
+        }}
+      >
+        <View
+          style={{
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text>Hours Worked this Week: CALCULATE</Text>
+          <IconButton
+            icon={`chevron-${isWeekExpanded ? "up" : "down"}`}
+            size={10}
+            style={{
+              margin: DEFAULT_APP_PADDING / 2,
+            }}
+          />
+        </View>
+      </Pressable>
+    </View>
   );
 };
 
