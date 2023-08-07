@@ -5,6 +5,7 @@ export type AppSliceInitialState = {
   currentDateInformation: CurrentDateInformation;
   databaseInstance: SQLite.SQLiteDatabase;
   dbMonthData: DbMonthData[];
+  isInitialLoad: boolean;
   selectedDateInformation: SelectedDateInformation;
   touchedDateInformation: TouchedDateInformation;
 };

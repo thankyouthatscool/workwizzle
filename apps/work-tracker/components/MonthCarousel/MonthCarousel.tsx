@@ -75,7 +75,7 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
   }, [SELECTED_MONTH, SELECTED_YEAR]);
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
       <Text>
         {CURRENT_WEEK_DAY_LONG}, {CURRENT_MONTH_LONG} {CURRENT_DATE},{" "}
         {CURRENT_YEAR}

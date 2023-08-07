@@ -42,6 +42,7 @@ const initialState: AppSliceInitialState = {
   },
   databaseInstance: SQLite.openDatabase("dayTracker.db"),
   dbMonthData: [],
+  isInitialLoad: true,
   selectedDateInformation: {
     SELECTED_DATE: CURRENT_DATE,
     SELECTED_MONTH: CURRENT_MONTH,
@@ -54,6 +55,11 @@ export const appSlice = createSlice({
   name: "app",
   initialState,
   reducers: {
+    // Initial Load
+    setIsInitialLoad: (state, { payload }: PayloadAction<boolean>) => {
+      state.isInitialLoad = payload;
+    },
+
     // App Defaults
     setAppDefaults: (state, { payload }: PayloadAction<AppDefaults>) => {
       state.appSettings.appDefaults = payload;
@@ -83,6 +89,9 @@ export const appSlice = createSlice({
 });
 
 export const {
+  // Initial Load
+  setIsInitialLoad,
+
   // App Defaults
   setAppDefaults,
 

@@ -1,23 +1,45 @@
 import { useCallback, useEffect } from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
+import * as SplashScreen from "expo-splash-screen";
 
-import { useAppSelector } from "@hooks";
+import { useAppDispatch, useAppSelector } from "@hooks";
 import { HomeScreen } from "@screens/HomeScreen";
 import { SettingsScreen } from "@screens/SettingsScreen";
+import { setAppDefaults, setIsInitialLoad } from "@store";
 import { DrawerStackProps } from "@types";
-import { createDefaultTableSQLString, dropDefaultTableSQLString } from "@utils";
+import {
+  createDefaultTableSQLString,
+  dropDefaultTableSQLString,
+  getAppDefaults,
+} from "@utils";
 
 const DrawerStack = createDrawerNavigator<DrawerStackProps>();
 
 export const AppRoot = () => {
+  const dispatch = useAppDispatch();
+
   const { databaseInstance: db } = useAppSelector(({ app }) => app);
 
   const handleInitialLoad = useCallback(() => {
     db.transaction(
       (tx) => {
+        // tx.executeSql(dropDefaultTableSQLString);
         tx.executeSql(createDefaultTableSQLString);
       },
-      (err) => console.log(err)
+      (err) => console.log(err),
+      async () => {
+        const appDefaults = await getAppDefaults();
+
+        if (!!appDefaults) {
+          dispatch(setAppDefaults(appDefaults));
+        }
+
+        setIsInitialLoad(false);
+
+        setTimeout(async () => {
+          await SplashScreen.hideAsync();
+        }, 250);
+      }
     );
   }, []);
 
@@ -27,7 +49,7 @@ export const AppRoot = () => {
 
   return (
     <DrawerStack.Navigator
-      initialRouteName="Settings"
+      initialRouteName="Home"
       screenOptions={{ headerShown: false }}
     >
       <DrawerStack.Screen component={HomeScreen} name="Home" />

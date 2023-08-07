@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Button, Divider, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "@hooks";
 import { setAppDefaults } from "@store";
 import { DEFAULT_APP_PADDING } from "@theme";
 import { AppDefaults } from "@types";
+import { saveAppDefaults } from "@utils";
 
 import { FooterWrapper, MainWrapper } from "./Styled";
 
@@ -34,29 +35,32 @@ export const AppDefaultsSettingsSection = () => {
 
   // Hooks
   const {
-    appSettings: {
-      appDefaults: {
-        DEFAULT_COMMENT,
-        DEFAULT_DAILY_WORK_HOURS,
-        DEFAULT_HOURLY_RATE,
-      },
-    },
+    appSettings: { appDefaults },
   } = useAppSelector(({ app }) => app);
 
   // Local State
   const [formData, setFormData] = useState<AppDefaults>(() => ({
-    DEFAULT_COMMENT,
-    DEFAULT_DAILY_WORK_HOURS,
-    DEFAULT_HOURLY_RATE,
+    DEFAULT_COMMENT: appDefaults.DEFAULT_COMMENT,
+    DEFAULT_DAILY_WORK_HOURS: appDefaults.DEFAULT_DAILY_WORK_HOURS,
+    DEFAULT_HOURLY_RATE: appDefaults.DEFAULT_HOURLY_RATE,
   }));
   const [isUpdateNeeded, setIsUpdateNeeded] = useState<boolean>(false);
 
   // Handlers
-  const handleSaveAppDefaults = useCallback(() => {
+  const handleSaveAppDefaults = useCallback(async () => {
+    await saveAppDefaults(formData);
+
     dispatch(setAppDefaults(formData));
 
     setIsUpdateNeeded(() => false);
   }, [formData]);
+
+  // Effects
+  useEffect(() => {
+    if (!!appDefaults) {
+      setFormData(() => appDefaults);
+    }
+  }, [appDefaults]);
 
   return (
     <View>
