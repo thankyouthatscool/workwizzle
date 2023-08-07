@@ -33,6 +33,7 @@ export type TouchedDateInformation = {
 
 export type DbMonthData = {
   dayId: string;
+  weekId: string;
   monthId: string;
   hoursWorked: string;
   hourlyRate: string;

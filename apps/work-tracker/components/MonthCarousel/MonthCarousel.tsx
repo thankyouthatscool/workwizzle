@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector, useDateHooks } from "@hooks";
 import { COLORS, DEFAULT_APP_PADDING } from "@theme";
 import { setDbMonthData, setTouchedDateInformation } from "@store";
 import type { MonthCarouselScreenProps } from "@types";
-import { getMonthInformation, monthNameLookup } from "@utils";
+import { getDayOfYear, getMonthInformation, monthNameLookup } from "@utils";
 
 import { CalendarWrapper, WeekdayWrapper } from "./Styled";
 import {
@@ -15,6 +15,7 @@ import {
   DEFAULT_DAILY_WORK_HOURS,
   DEFAULT_HOURLY_RATE,
 } from "@constants";
+import { getWeek } from "date-fns";
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
 
@@ -54,7 +55,7 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
   }, [SELECTED_MONTH, SELECTED_YEAR]);
 
   useEffect(() => {
-    if (!!SELECTED_MONTH && !!SELECTED_YEAR) {
+    if ((!!SELECTED_MONTH || SELECTED_MONTH === 0) && !!SELECTED_YEAR) {
       db.transaction(
         (tx) => {
           tx.executeSql(
@@ -145,19 +146,23 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
                   idx + 1 - firstDayIndex > 0 &&
                   idx + 1 - firstDayIndex <= numberOfDays
                 ) {
-                  console.log({
-                    TOUCHED_DATE: idx + 1 - firstDayIndex,
-                    TOUCHED_MONTH: SELECTED_MONTH,
-                    TOUCHED_YEAR: SELECTED_YEAR,
-                  });
+                  const weekId = `${getWeek(
+                    new Date(
+                      `${SELECTED_YEAR}-${SELECTED_MONTH + 1}-${
+                        idx + 1 - firstDayIndex
+                      }`
+                    ),
+                    { weekStartsOn: 1 }
+                  )}-${SELECTED_YEAR}`;
 
                   db.transaction(
                     (tx) => {
                       tx.executeSql(
                         `
                           INSERT INTO dayTracker
-                          VALUES (?, ?, ?, ?, ?, ?, ?)
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                           ON CONFLICT (dayId) DO UPDATE SET
+                            weekId = excluded.weekId,
                             monthId = excluded.monthId,
                             hoursWorked = excluded.hoursWorked,
                             hourlyRate = excluded.hourlyRate,
@@ -169,6 +174,7 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
                           `${idx + 1 - firstDayIndex}-${monthNameLookup(
                             SELECTED_MONTH
                           )}-${SELECTED_YEAR}`,
+                          weekId,
                           `${monthNameLookup(SELECTED_MONTH)}-${SELECTED_YEAR}`,
                           DEFAULT_DAILY_WORK_HOURS,
                           DEFAULT_HOURLY_RATE,

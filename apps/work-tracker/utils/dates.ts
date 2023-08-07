@@ -36,6 +36,12 @@ export const getCurrentDateInformation = () => {
   };
 };
 
+export const getDayOfYear = (date: Date) =>
+  Math.floor(
+    // @ts-ignore
+    (date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24)
+  );
+
 export const getMonthInformation = (year: number, month: number) => {
   const numberOfDays = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 0).getDay();

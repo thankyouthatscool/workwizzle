@@ -4,12 +4,13 @@ import { Pressable, ScrollView, View } from "react-native";
 import { Button, IconButton, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import { getWeek } from "date-fns";
 
 import { useAppDispatch, useAppSelector } from "@hooks";
 import { setDbMonthData } from "@store";
 import { DEFAULT_APP_PADDING } from "@theme";
 import { TouchedDayScreenProps } from "@types";
-import { monthNameLookup, weekDayNameLookup } from "@utils";
+import { getDayOfYear, monthNameLookup, weekDayNameLookup } from "@utils";
 
 import { ButtonWrapper } from "./Styled";
 
@@ -42,6 +43,7 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
     comment: DEFAULT_COMMENT,
   });
   const [isDefaultData, setIsDefaultData] = useState<boolean>(false);
+  const [isMoreDataExpanded, setIsMoreDataExpanded] = useState<boolean>(false);
   const [isStartEndExpanded, setIsStartEndExpanded] = useState<boolean>(false);
 
   const { databaseInstance: db, touchedDateInformation } = useAppSelector(
@@ -118,6 +120,14 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
     const dayId = `${touchedDateInformation?.TOUCHED_DATE}-${monthNameLookup(
       touchedDateInformation?.TOUCHED_MONTH!
     )}-${touchedDateInformation?.TOUCHED_YEAR}`;
+    const weekId = `${getWeek(
+      new Date(
+        `${touchedDateInformation?.TOUCHED_YEAR}-${
+          touchedDateInformation?.TOUCHED_MONTH! + 1
+        }-${touchedDateInformation?.TOUCHED_DATE}`
+      ),
+      { weekStartsOn: 1 }
+    )}-${touchedDateInformation?.TOUCHED_YEAR}`;
     const monthId = `${monthNameLookup(
       touchedDateInformation?.TOUCHED_MONTH!
     )}-${touchedDateInformation?.TOUCHED_YEAR}`;
@@ -127,8 +137,9 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
         tx.executeSql(
           `
             INSERT INTO dayTracker
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (dayId) DO UPDATE SET
+              weekId = excluded.weekId,
               monthId = excluded.monthId,
               hoursWorked = excluded.hoursWorked,
               hourlyRate = excluded.hourlyRate,
@@ -138,6 +149,7 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
         `,
           [
             dayId,
+            weekId,
             monthId,
             hoursWorked,
             hourlyRate,
@@ -191,8 +203,6 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
           ],
           (_, { rows: { _array } }) => {
             if (!!_array[0]) {
-              console.log(_array[0]);
-
               setFormData(() => _array[0]);
             } else {
               setIsDefaultData(() => true);
@@ -410,23 +420,72 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
           }}
         >
           <Text variant="titleLarge">More Information</Text>
-          <IconButton icon="chevron-down" mode="contained" />
+          <IconButton
+            icon={`chevron-${isMoreDataExpanded ? "up" : "down"}`}
+            mode="contained"
+            onPress={() => {
+              setIsMoreDataExpanded(
+                (isMoreDataExpanded) => !isMoreDataExpanded
+              );
+            }}
+          />
         </View>
-        {true && <DataComponent />}
+        {isMoreDataExpanded && <DataComponent />}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 export const DataComponent = () => {
-  const [isWeekExpanded, setIsWeekExpanded] = useState<boolean>(false);
+  // Global State
+  const { databaseInstance: db, touchedDateInformation } = useAppSelector(
+    ({ app }) => app
+  );
+
+  // Local State
+  const [topExpandedSections, setTopExpandedSections] = useState<{
+    earnings: boolean;
+    hoursWorked: boolean;
+  }>({ earnings: false, hoursWorked: false });
+
+  useEffect(() => {
+    const touchedWeek = getWeek(
+      new Date(
+        `${touchedDateInformation?.TOUCHED_YEAR}-${
+          touchedDateInformation?.TOUCHED_MONTH! + 1
+        }-${touchedDateInformation?.TOUCHED_DATE}`
+      ),
+      { weekStartsOn: 1 }
+    );
+
+    db.transaction(
+      (tx) => {
+        tx.executeSql(
+          `
+            SELECT * FROM dayTracker
+            WHERE weekId = ?
+        `,
+          [`${touchedWeek}-${touchedDateInformation?.TOUCHED_YEAR}`],
+          (_, { rows: { _array } }) => {
+            console.log(_array);
+            console.log(_array.length);
+          }
+        );
+      },
+      (err) => console.log(err),
+      () => {}
+    );
+  }, [touchedDateInformation]);
 
   return (
     <View style={{ paddingHorizontal: DEFAULT_APP_PADDING }}>
       <Pressable
-        onPress={() => {
-          setIsWeekExpanded((isWeekExpanded) => !isWeekExpanded);
-        }}
+        onPress={() =>
+          setTopExpandedSections((expandedSections) => ({
+            ...expandedSections,
+            hoursWorked: !expandedSections.hoursWorked,
+          }))
+        }
       >
         <View
           style={{
@@ -435,16 +494,45 @@ export const DataComponent = () => {
             justifyContent: "space-between",
           }}
         >
-          <Text>Hours Worked this Week: CALCULATE</Text>
+          <Text variant="titleMedium">Hours Worked</Text>
           <IconButton
-            icon={`chevron-${isWeekExpanded ? "up" : "down"}`}
+            icon={`chevron-${topExpandedSections.hoursWorked ? "up" : "down"}`}
             size={10}
-            style={{
-              margin: DEFAULT_APP_PADDING / 2,
-            }}
           />
         </View>
       </Pressable>
+      {topExpandedSections.hoursWorked && (
+        <View>
+          <Text>Charts for the hours worked.</Text>
+        </View>
+      )}
+      <Pressable
+        onPress={() =>
+          setTopExpandedSections((expandedSections) => ({
+            ...expandedSections,
+            earnings: !expandedSections.earnings,
+          }))
+        }
+      >
+        <View
+          style={{
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text variant="titleMedium">Earnings</Text>
+          <IconButton
+            icon={`chevron-${topExpandedSections.earnings ? "up" : "down"}`}
+            size={10}
+          />
+        </View>
+      </Pressable>
+      {topExpandedSections.earnings && (
+        <View>
+          <Text>Charts for the earnings.</Text>
+        </View>
+      )}
     </View>
   );
 };

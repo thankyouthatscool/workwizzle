@@ -3,6 +3,7 @@ export const createDefaultTableSQLString = `
 CREATE TABLE IF NOT EXISTS dayTracker 
 (
     dayId TEXT UNIQUE NOT NULL PRIMARY KEY, 
+    weekId TEXT NOT NULL,
     monthId TEXT NOT NULL, 
     hoursWorked TEXT NOT NULL, 
     hourlyRate TEXT NOT NULL, 
