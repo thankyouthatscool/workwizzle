@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { type FC, useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Dimensions, Pressable, ScrollView, View } from "react-native";
 import { Button, IconButton, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
@@ -9,10 +9,12 @@ import { getWeek } from "date-fns";
 import { useAppDispatch, useAppSelector } from "@hooks";
 import { setDbMonthData } from "@store";
 import { DEFAULT_APP_PADDING } from "@theme";
-import { TouchedDayScreenProps } from "@types";
-import { getDayOfYear, monthNameLookup, weekDayNameLookup } from "@utils";
+import { TableData, TouchedDayScreenProps } from "@types";
+import { monthNameLookup, weekDayNameLookup } from "@utils";
 
 import { ButtonWrapper } from "./Styled";
+
+const { width: WINDOW_WIDTH } = Dimensions.get("window");
 
 export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
   const dispatch = useAppDispatch();
@@ -438,15 +440,18 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
 
 export const DataComponent = () => {
   // Global State
-  const { databaseInstance: db, touchedDateInformation } = useAppSelector(
-    ({ app }) => app
-  );
+  const {
+    databaseInstance: db,
+    dbMonthData,
+    touchedDateInformation,
+  } = useAppSelector(({ app }) => app);
 
   // Local State
   const [topExpandedSections, setTopExpandedSections] = useState<{
     earnings: boolean;
     hoursWorked: boolean;
   }>({ earnings: false, hoursWorked: false });
+  const [weekData, setWeekData] = useState<TableData[]>([]);
 
   useEffect(() => {
     const touchedWeek = getWeek(
@@ -467,8 +472,7 @@ export const DataComponent = () => {
         `,
           [`${touchedWeek}-${touchedDateInformation?.TOUCHED_YEAR}`],
           (_, { rows: { _array } }) => {
-            console.log(_array);
-            console.log(_array.length);
+            setWeekData(() => _array);
           }
         );
       },
@@ -501,10 +505,41 @@ export const DataComponent = () => {
           />
         </View>
       </Pressable>
+
       {topExpandedSections.hoursWorked && (
-        <View>
-          <Text>Charts for the hours worked.</Text>
-        </View>
+        <ScrollView
+          horizontal
+          overScrollMode="never"
+          showsHorizontalScrollIndicator={false}
+          style={{ flexDirection: "row" }}
+        >
+          {/* <Text>Charts for the hours worked.</Text>
+          <Text>
+            {weekData.reduce((acc, { hoursWorked }) => {
+              return acc + parseFloat(hoursWorked);
+            }, 0)}{" "}
+            hours worked across {weekData.length} days.
+          </Text>
+          <Text>
+            {dbMonthData.reduce((acc, { hoursWorked }) => {
+              return acc + parseFloat(hoursWorked);
+            }, 0)}
+          </Text> */}
+          <View
+            style={{
+              borderWidth: 1,
+              width: WINDOW_WIDTH - DEFAULT_APP_PADDING * 4,
+            }}
+          >
+            <Text>Today</Text>
+          </View>
+          <View>
+            <Text>This Week</Text>
+          </View>
+          <View>
+            <Text>This Month</Text>
+          </View>
+        </ScrollView>
       )}
       <Pressable
         onPress={() =>
@@ -528,6 +563,11 @@ export const DataComponent = () => {
           />
         </View>
       </Pressable>
+      <Text>
+        {weekData.reduce((acc, { hoursWorked, hourlyRate }) => {
+          return acc + parseFloat(hourlyRate) * parseFloat(hoursWorked);
+        }, 0)}
+      </Text>
       {topExpandedSections.earnings && (
         <View>
           <Text>Charts for the earnings.</Text>
