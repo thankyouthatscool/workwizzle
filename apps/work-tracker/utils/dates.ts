@@ -154,3 +154,44 @@ const monthShortToLong = (monthShort: string) => {
     Aug: "August",
   }[monthShort];
 };
+
+// More Month Data
+export const getMoreMonthData = (year: number, month: number) => {
+  const { numberOfDays } = getMonthInformation(year, month);
+
+  const targetMonth = new Date(`${year}-${month}-01`);
+
+  let monthDaysArray: {
+    dayNameLong: string;
+    dayNameShort: string;
+    dayOfWeek: string;
+    weekNumber: number;
+  }[] = [];
+
+  for (let i = 0; i <= numberOfDays; i++) {
+    const dayNameLong = addDays(targetMonth, i).toDateString();
+    const [weekDay, monthShort, date, year] = dayNameLong.split(" ");
+
+    monthDaysArray = [
+      ...monthDaysArray,
+      {
+        dayNameLong,
+        dayNameShort: `${date}-${monthShortToLong(monthShort)}-${year}`,
+        dayOfWeek: weekDay,
+        weekNumber: getWeek(new Date(`${year}-${month}-${date}`), {
+          weekStartsOn: 1,
+        }),
+      },
+    ];
+  }
+
+  const weeksDays = monthDaysArray.reduce((acc, val) => {
+    if (acc[val.weekNumber]) {
+      return { ...acc, [val.weekNumber]: [...acc[val.weekNumber], val] };
+    } else {
+      return { ...acc, [val.weekNumber]: [val] };
+    }
+  }, {} as { [key: number]: { dayNameLong: string; dayNameShort: string; dayOfWeek: string; weekNumber: number }[] });
+
+  return { monthDaysArray, weeksDays, weekNumbers: Object.keys(weeksDays) };
+};

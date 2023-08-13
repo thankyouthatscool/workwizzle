@@ -531,7 +531,13 @@ export const DataComponent = () => {
               width: WINDOW_WIDTH - DEFAULT_APP_PADDING * 4,
             }}
           >
-            <Text>This Week</Text>
+            <Text>
+              This week:{" "}
+              {weekData.reduce((acc, val) => {
+                return acc + parseFloat(val.hoursWorked);
+              }, 0)}{" "}
+              hour(s) worked
+            </Text>
             {!!weekDays.length && (
               <LineChart
                 bezier
@@ -581,7 +587,7 @@ export const DataComponent = () => {
             )}
           </View>
           <View>
-            <Text>This Month</Text>
+            <Text>This Month - __ hour(s) worked</Text>
           </View>
         </ScrollView>
       )}
@@ -607,52 +613,75 @@ export const DataComponent = () => {
           />
         </View>
       </Pressable>
-      {!!weekDays.length && (
-        <LineChart
-          bezier
-          chartConfig={{
-            backgroundColor: "#e26a00",
-            backgroundGradientFrom: "#fb8c00",
-            backgroundGradientTo: "#ffa726",
-            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-            style: {
-              borderRadius: 16,
-            },
-            propsForDots: {
-              r: "6",
-              strokeWidth: "2",
-              stroke: "#ffa726",
-            },
-          }}
-          data={{
-            labels: weekDays.map((day) => `${day.split("-")[0]}`),
-            datasets: [
-              {
-                data: weekDays.map((day) => {
-                  const targetDay = weekData.find((rec) => rec.dayId === day);
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {!!weekDays.length && (
+          <View>
+            <Text>
+              This week: $
+              {weekData.reduce(
+                (acc, val) =>
+                  acc +
+                  parseFloat(val.hoursWorked) * parseFloat(val.hourlyRate),
+                0
+              )}
+            </Text>
+            <LineChart
+              bezier
+              chartConfig={{
+                backgroundColor: "#e26a00",
+                backgroundGradientFrom: "#fb8c00",
+                backgroundGradientTo: "#ffa726",
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+                propsForDots: {
+                  r: "6",
+                  strokeWidth: "2",
+                  stroke: "#ffa726",
+                },
+              }}
+              data={{
+                labels: weekDays.map((day) => `${day.split("-")[0]}`),
+                datasets: [
+                  {
+                    data: weekDays.map((day) => {
+                      const targetDay = weekData.find(
+                        (rec) => rec.dayId === day
+                      );
 
-                  if (!!targetDay) {
-                    return (
-                      parseFloat(targetDay.hoursWorked) *
-                      parseFloat(targetDay.hourlyRate)
-                    );
-                  } else {
-                    return 0;
-                  }
-                }),
-              },
-            ],
-          }}
-          fromZero
-          style={{
-            borderRadius: 16,
-          }}
-          height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
-          width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
-          formatYLabel={(val) => `$${parseInt(val)}`}
-        />
-      )}
+                      if (!!targetDay) {
+                        return (
+                          parseFloat(targetDay.hoursWorked) *
+                          parseFloat(targetDay.hourlyRate)
+                        );
+                      } else {
+                        return 0;
+                      }
+                    }),
+                  },
+                ],
+              }}
+              fromZero
+              style={{
+                borderRadius: 16,
+              }}
+              height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+              width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+              formatYLabel={(val) => `$${parseInt(val)}`}
+            />
+          </View>
+        )}
+        <Text>
+          This month: $
+          {dbMonthData.reduce((acc, val) => {
+            return (
+              acc + parseFloat(val.hourlyRate) * parseFloat(val.hoursWorked)
+            );
+          }, 0)}
+        </Text>
+      </ScrollView>
       {topExpandedSections.earnings && (
         <View>
           <Text>Charts for the earnings.</Text>

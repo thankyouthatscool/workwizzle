@@ -1,4 +1,4 @@
-import { getWeekData } from "./dates";
+import { getMoreMonthData, getWeekData } from "./dates";
 
 describe("getWeekData", () => {
   it("returns the correct week information", () => {
@@ -18,5 +18,15 @@ describe("getWeekData", () => {
       ],
       weekOfYear: 33,
     });
+  });
+});
+
+describe("getMoreMonthInformation", () => {
+  it("returns the correct data for August, 2023", () => {
+    const res = getMoreMonthData(2023, 8);
+
+    console.log(res);
+
+    // expect(res).toEqual(`s`);
   });
 });
