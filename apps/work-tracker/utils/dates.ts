@@ -1,3 +1,5 @@
+import { addDays, addWeeks, getWeek, monthsInQuarter } from "date-fns";
+
 export const getCurrentDateInformation = () => {
   const dateInstance = new Date();
 
@@ -119,4 +121,36 @@ export const getDurationInHours = (duration: number) => {
   }
 
   return [`${hours}`];
+};
+
+// Week Data
+export const getWeekData = (date: Date) => {
+  const dateWeekOfYear = getWeek(date, { weekStartsOn: 1 });
+
+  const startOfYear = new Date(`${date.getFullYear()}-01-01`);
+
+  const weekStart = addDays(addWeeks(startOfYear, dateWeekOfYear - 2), 1);
+
+  let daysOfTheWeek: Date[] = [weekStart];
+
+  for (let i = 0; i < 6; i++) {
+    daysOfTheWeek = [...daysOfTheWeek, addDays(weekStart, i + 1)];
+  }
+
+  const weekData = {
+    daysOfTheWeek: daysOfTheWeek.map((date) => {
+      const [_, month, _date, year] = date.toDateString().split(" ");
+
+      return `${parseInt(_date)}-${monthShortToLong(month)}-${year}`;
+    }),
+    weekOfYear: dateWeekOfYear,
+  };
+
+  return weekData;
+};
+
+const monthShortToLong = (monthShort: string) => {
+  return {
+    Aug: "August",
+  }[monthShort];
 };

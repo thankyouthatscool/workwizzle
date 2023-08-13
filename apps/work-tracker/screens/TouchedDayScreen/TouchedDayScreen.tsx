@@ -5,12 +5,13 @@ import { Button, IconButton, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { getWeek } from "date-fns";
+import { LineChart } from "react-native-chart-kit";
 
 import { useAppDispatch, useAppSelector } from "@hooks";
 import { setDbMonthData } from "@store";
 import { DEFAULT_APP_PADDING } from "@theme";
 import { TableData, TouchedDayScreenProps } from "@types";
-import { monthNameLookup, weekDayNameLookup } from "@utils";
+import { getWeekData, monthNameLookup, weekDayNameLookup } from "@utils";
 
 import { ButtonWrapper } from "./Styled";
 
@@ -452,7 +453,9 @@ export const DataComponent = () => {
     hoursWorked: boolean;
   }>({ earnings: false, hoursWorked: false });
   const [weekData, setWeekData] = useState<TableData[]>([]);
+  const [weekDays, setWeekDays] = useState<string[]>([]);
 
+  // Effects
   useEffect(() => {
     const touchedWeek = getWeek(
       new Date(
@@ -477,7 +480,18 @@ export const DataComponent = () => {
         );
       },
       (err) => console.log(err),
-      () => {}
+      () => {
+        setWeekDays(
+          () =>
+            getWeekData(
+              new Date(
+                `${touchedDateInformation?.TOUCHED_YEAR}-${
+                  touchedDateInformation?.TOUCHED_MONTH! + 1
+                }-${touchedDateInformation?.TOUCHED_DATE}`
+              )
+            ).daysOfTheWeek
+        );
+      }
     );
   }, [touchedDateInformation]);
 
@@ -505,7 +519,6 @@ export const DataComponent = () => {
           />
         </View>
       </Pressable>
-
       {topExpandedSections.hoursWorked && (
         <ScrollView
           horizontal
@@ -513,28 +526,59 @@ export const DataComponent = () => {
           showsHorizontalScrollIndicator={false}
           style={{ flexDirection: "row" }}
         >
-          {/* <Text>Charts for the hours worked.</Text>
-          <Text>
-            {weekData.reduce((acc, { hoursWorked }) => {
-              return acc + parseFloat(hoursWorked);
-            }, 0)}{" "}
-            hours worked across {weekData.length} days.
-          </Text>
-          <Text>
-            {dbMonthData.reduce((acc, { hoursWorked }) => {
-              return acc + parseFloat(hoursWorked);
-            }, 0)}
-          </Text> */}
           <View
             style={{
-              borderWidth: 1,
               width: WINDOW_WIDTH - DEFAULT_APP_PADDING * 4,
             }}
           >
-            <Text>Today</Text>
-          </View>
-          <View>
             <Text>This Week</Text>
+            {!!weekDays.length && (
+              <LineChart
+                bezier
+                chartConfig={{
+                  backgroundColor: "#e26a00",
+                  backgroundGradientFrom: "#fb8c00",
+                  backgroundGradientTo: "#ffa726",
+                  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                  labelColor: (opacity = 1) =>
+                    `rgba(255, 255, 255, ${opacity})`,
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForDots: {
+                    r: "6",
+                    strokeWidth: "2",
+                    stroke: "#ffa726",
+                  },
+                }}
+                data={{
+                  labels: weekDays.map((day) => `${day.split("-")[0]}`),
+                  datasets: [
+                    {
+                      data: weekDays.map((day) => {
+                        const targetDay = weekData.find(
+                          (rec) => rec.dayId === day
+                        );
+
+                        if (!!targetDay) {
+                          return parseFloat(targetDay.hoursWorked);
+                        } else {
+                          return 0;
+                        }
+                      }),
+                    },
+                  ],
+                }}
+                formatYLabel={(val) => parseInt(val).toString()}
+                fromZero
+                style={{
+                  borderRadius: 16,
+                }}
+                //
+                height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+                width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+              />
+            )}
           </View>
           <View>
             <Text>This Month</Text>
@@ -563,11 +607,52 @@ export const DataComponent = () => {
           />
         </View>
       </Pressable>
-      <Text>
-        {weekData.reduce((acc, { hoursWorked, hourlyRate }) => {
-          return acc + parseFloat(hourlyRate) * parseFloat(hoursWorked);
-        }, 0)}
-      </Text>
+      {!!weekDays.length && (
+        <LineChart
+          bezier
+          chartConfig={{
+            backgroundColor: "#e26a00",
+            backgroundGradientFrom: "#fb8c00",
+            backgroundGradientTo: "#ffa726",
+            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+            style: {
+              borderRadius: 16,
+            },
+            propsForDots: {
+              r: "6",
+              strokeWidth: "2",
+              stroke: "#ffa726",
+            },
+          }}
+          data={{
+            labels: weekDays.map((day) => `${day.split("-")[0]}`),
+            datasets: [
+              {
+                data: weekDays.map((day) => {
+                  const targetDay = weekData.find((rec) => rec.dayId === day);
+
+                  if (!!targetDay) {
+                    return (
+                      parseFloat(targetDay.hoursWorked) *
+                      parseFloat(targetDay.hourlyRate)
+                    );
+                  } else {
+                    return 0;
+                  }
+                }),
+              },
+            ],
+          }}
+          fromZero
+          style={{
+            borderRadius: 16,
+          }}
+          height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+          width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+          formatYLabel={(val) => `$${parseInt(val)}`}
+        />
+      )}
       {topExpandedSections.earnings && (
         <View>
           <Text>Charts for the earnings.</Text>
