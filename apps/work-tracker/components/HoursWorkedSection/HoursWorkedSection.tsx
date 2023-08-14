@@ -144,7 +144,7 @@ export const HoursWorkedSection = () => {
             "August",
             "July",
           ].map((month, idx) => {
-            // FIXME_: This logic here is all wrong.
+            // FIXME: This logic here is all wrong.
             if (idx <= 5) {
               return `${month}-${touchedDateInformation?.TOUCHED_YEAR! + 1}`;
             } else {
