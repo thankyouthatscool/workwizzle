@@ -16,3 +16,7 @@ export const MonthSection: FC<PropsWithChildren> = ({ children }) => {
 export const PhysicalYearSection: FC<PropsWithChildren> = ({ children }) => {
   return <View style={{ width: WINDOW_WIDTH }}>{children}</View>;
 };
+
+export const FinancialYearSection: FC<PropsWithChildren> = ({ children }) => {
+  return <View style={{ width: WINDOW_WIDTH }}>{children}</View>;
+};

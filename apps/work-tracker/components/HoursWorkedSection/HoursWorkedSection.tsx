@@ -9,7 +9,12 @@ import { DEFAULT_APP_PADDING } from "@theme";
 import type { TableData } from "@types";
 import { getMoreMonthData, getWeekData, monthNameLookup, pl } from "@utils";
 
-import { MonthSection, PhysicalYearSection, WeekSection } from "./Styled";
+import {
+  FinancialYearSection,
+  MonthSection,
+  PhysicalYearSection,
+  WeekSection,
+} from "./Styled";
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
 
@@ -307,7 +312,6 @@ export const HoursWorkedSection = () => {
           />
         )}
       </MonthSection>
-      {/* FIXME: Make wrapper for year - physical and tax. */}
       <PhysicalYearSection>
         <Card
           style={{
@@ -380,9 +384,9 @@ export const HoursWorkedSection = () => {
           />
         )}
       </PhysicalYearSection>
-      <MonthSection>
+      <FinancialYearSection>
         <Text>Hours worked - This financial year</Text>
-      </MonthSection>
+      </FinancialYearSection>
     </ScrollView>
   );
 };
