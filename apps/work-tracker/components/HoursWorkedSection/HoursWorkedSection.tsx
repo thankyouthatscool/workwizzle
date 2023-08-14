@@ -145,6 +145,8 @@ export const HoursWorkedSection = () => {
             "July",
           ].map((month, idx) => {
             // FIXME: This logic here is all wrong.
+            // TODO: Need to use both the TOUCHED_MONTH AND TOUCHED_YEAR
+            // TODO: in combination to determine what financial year I'm in
             if (idx <= 5) {
               return `${month}-${touchedDateInformation?.TOUCHED_YEAR! + 1}`;
             } else {
