@@ -7,6 +7,7 @@ import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { getWeek } from "date-fns";
 import { LineChart } from "react-native-chart-kit";
 
+import { HoursWorkedSection } from "@components/HoursWorkedSection";
 import { useAppDispatch, useAppSelector } from "@hooks";
 import { setDbMonthData } from "@store";
 import { DEFAULT_APP_PADDING } from "@theme";
@@ -55,10 +56,6 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
 
   // Handlers
   const handleDeleteDayData = useCallback(() => {
-    console.log(touchedDateInformation?.TOUCHED_DATE);
-    console.log(monthNameLookup(touchedDateInformation?.TOUCHED_MONTH!));
-    console.log(touchedDateInformation?.TOUCHED_YEAR);
-
     db.transaction(
       (tx) => {
         tx.executeSql(
@@ -496,7 +493,7 @@ export const DataComponent = () => {
   }, [touchedDateInformation]);
 
   return (
-    <View style={{ paddingHorizontal: DEFAULT_APP_PADDING }}>
+    <View>
       <Pressable
         onPress={() =>
           setTopExpandedSections((expandedSections) => ({
@@ -510,6 +507,7 @@ export const DataComponent = () => {
             alignItems: "center",
             flexDirection: "row",
             justifyContent: "space-between",
+            marginHorizontal: DEFAULT_APP_PADDING,
           }}
         >
           <Text variant="titleMedium">Hours Worked</Text>
@@ -519,7 +517,8 @@ export const DataComponent = () => {
           />
         </View>
       </Pressable>
-      {topExpandedSections.hoursWorked && (
+      {topExpandedSections.hoursWorked && <HoursWorkedSection />}
+      {/* {topExpandedSections.hoursWorked && (
         <ScrollView
           horizontal
           overScrollMode="never"
@@ -538,7 +537,93 @@ export const DataComponent = () => {
               }, 0)}{" "}
               hour(s) worked
             </Text>
-            {!!weekDays.length && (
+            {!!weekDays.length && <HoursWorkedSection />} */}
+      {/* // <LineChart
+              //   bezier
+              //   chartConfig={{
+              //     backgroundColor: "#e26a00",
+              //     backgroundGradientFrom: "#fb8c00",
+              //     backgroundGradientTo: "#ffa726",
+              //     color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              //     labelColor: (opacity = 1) =>
+              //       `rgba(255, 255, 255, ${opacity})`,
+              //     style: {
+              //       borderRadius: 16,
+              //     },
+              //     propsForDots: {
+              //       r: "6",
+              //       strokeWidth: "2",
+              //       stroke: "#ffa726",
+              //     },
+              //   }}
+              //   data={{
+                  // labels: weekDays.map((day) => `${day.split("-")[0]}`),
+                  // datasets: [
+                  //   {
+                  //     data: weekDays.map((day) => {
+                  //       const targetDay = weekData.find(
+                  //         (rec) => rec.dayId === day
+                  //       );
+
+                  //       if (!!targetDay) {
+                  //         return parseFloat(targetDay.hoursWorked);
+                  //       } else {
+                  //         return 0;
+                  //       }
+                  //     }), 
+                  //   },
+                  // ],
+              //   }}
+                // formatYLabel={(val) => parseInt(val).toString()}
+                // fromZero
+                // style={{
+                //   borderRadius: 16,
+                // }}
+              //   //
+              //   height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+              //   width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+              // /> */}
+      {/* </View>
+          <View>
+            <Text>This Month - __ hour(s) worked</Text>
+          </View>
+        </ScrollView>
+      )} */}
+      <Pressable
+        onPress={() =>
+          setTopExpandedSections((expandedSections) => ({
+            ...expandedSections,
+            earnings: !expandedSections.earnings,
+          }))
+        }
+      >
+        <View
+          style={{
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text variant="titleMedium">Earnings</Text>
+          <IconButton
+            icon={`chevron-${topExpandedSections.earnings ? "up" : "down"}`}
+            size={10}
+          />
+        </View>
+      </Pressable>
+      {topExpandedSections.earnings && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {!!weekDays.length && (
+            <View>
+              <Text>
+                This week: $
+                {weekData.reduce(
+                  (acc, val) =>
+                    acc +
+                    parseFloat(val.hoursWorked) * parseFloat(val.hourlyRate),
+                  0
+                )}
+              </Text>
               <LineChart
                 bezier
                 chartConfig={{
@@ -567,7 +652,10 @@ export const DataComponent = () => {
                         );
 
                         if (!!targetDay) {
-                          return parseFloat(targetDay.hoursWorked);
+                          return (
+                            parseFloat(targetDay.hoursWorked) *
+                            parseFloat(targetDay.hourlyRate)
+                          );
                         } else {
                           return 0;
                         }
@@ -575,113 +663,26 @@ export const DataComponent = () => {
                     },
                   ],
                 }}
-                formatYLabel={(val) => parseInt(val).toString()}
                 fromZero
                 style={{
                   borderRadius: 16,
                 }}
-                //
                 height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
                 width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
+                formatYLabel={(val) => `$${parseInt(val)}`}
               />
-            )}
-          </View>
-          <View>
-            <Text>This Month - __ hour(s) worked</Text>
-          </View>
+            </View>
+          )}
+          <Text>
+            This month: $
+            {dbMonthData.reduce((acc, val) => {
+              return (
+                acc + parseFloat(val.hourlyRate) * parseFloat(val.hoursWorked)
+              );
+            }, 0)}
+          </Text>
         </ScrollView>
       )}
-      <Pressable
-        onPress={() =>
-          setTopExpandedSections((expandedSections) => ({
-            ...expandedSections,
-            earnings: !expandedSections.earnings,
-          }))
-        }
-      >
-        <View
-          style={{
-            alignItems: "center",
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
-          <Text variant="titleMedium">Earnings</Text>
-          <IconButton
-            icon={`chevron-${topExpandedSections.earnings ? "up" : "down"}`}
-            size={10}
-          />
-        </View>
-      </Pressable>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {!!weekDays.length && (
-          <View>
-            <Text>
-              This week: $
-              {weekData.reduce(
-                (acc, val) =>
-                  acc +
-                  parseFloat(val.hoursWorked) * parseFloat(val.hourlyRate),
-                0
-              )}
-            </Text>
-            <LineChart
-              bezier
-              chartConfig={{
-                backgroundColor: "#e26a00",
-                backgroundGradientFrom: "#fb8c00",
-                backgroundGradientTo: "#ffa726",
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                style: {
-                  borderRadius: 16,
-                },
-                propsForDots: {
-                  r: "6",
-                  strokeWidth: "2",
-                  stroke: "#ffa726",
-                },
-              }}
-              data={{
-                labels: weekDays.map((day) => `${day.split("-")[0]}`),
-                datasets: [
-                  {
-                    data: weekDays.map((day) => {
-                      const targetDay = weekData.find(
-                        (rec) => rec.dayId === day
-                      );
-
-                      if (!!targetDay) {
-                        return (
-                          parseFloat(targetDay.hoursWorked) *
-                          parseFloat(targetDay.hourlyRate)
-                        );
-                      } else {
-                        return 0;
-                      }
-                    }),
-                  },
-                ],
-              }}
-              fromZero
-              style={{
-                borderRadius: 16,
-              }}
-              height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
-              width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
-              formatYLabel={(val) => `$${parseInt(val)}`}
-            />
-          </View>
-        )}
-        <Text>
-          This month: $
-          {dbMonthData.reduce((acc, val) => {
-            return (
-              acc + parseFloat(val.hourlyRate) * parseFloat(val.hoursWorked)
-            );
-          }, 0)}
-        </Text>
-      </ScrollView>
       {topExpandedSections.earnings && (
         <View>
           <Text>Charts for the earnings.</Text>
@@ -699,7 +700,6 @@ export const ScreenHeader: FC<{ title?: string }> = ({ title }) => {
       style={{
         alignItems: "center",
         flexDirection: "row",
-        padding: DEFAULT_APP_PADDING,
       }}
     >
       <IconButton

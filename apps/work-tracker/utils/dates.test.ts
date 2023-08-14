@@ -25,8 +25,7 @@ describe("getMoreMonthInformation", () => {
   it("returns the correct data for August, 2023", () => {
     const res = getMoreMonthData(2023, 8);
 
-    console.log(res);
-
-    // expect(res).toEqual(`s`);
+    expect(res.monthDaysArray.length).toEqual(31);
+    expect(res.weekNumbers).toEqual(["32", "33", "34", "35", "36"]);
   });
 });
