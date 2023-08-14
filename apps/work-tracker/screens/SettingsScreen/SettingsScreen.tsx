@@ -175,10 +175,6 @@ export const DataSettingsSection = () => {
   }, []);
 
   const handleSeedData = useCallback(() => {
-    const CURRENT_WEEK_NUMBER = getWeek(new Date(), { weekStartsOn: 1 });
-
-    console.log(CURRENT_WEEK_NUMBER);
-
     const SEED_DATA: TableData[] = [
       {
         comment: "Test Data!",
@@ -186,7 +182,7 @@ export const DataSettingsSection = () => {
         hourlyRate: "29",
         hoursWorked: "9",
         monthId: "August-2023",
-        weekId: `${(CURRENT_WEEK_NUMBER - 1).toString()}-2023`,
+        weekId: "32-2023",
       },
       {
         comment: "Test Data!",
@@ -194,7 +190,7 @@ export const DataSettingsSection = () => {
         hourlyRate: "28",
         hoursWorked: "12",
         monthId: "August-2023",
-        weekId: `${(CURRENT_WEEK_NUMBER - 1).toString()}-2023`,
+        weekId: "32-2023",
       },
       {
         comment: "Test Data!",
@@ -202,7 +198,7 @@ export const DataSettingsSection = () => {
         hourlyRate: "28",
         hoursWorked: "12",
         monthId: "August-2023",
-        weekId: `${CURRENT_WEEK_NUMBER.toString()}-2023`,
+        weekId: "33-2023",
       },
     ];
 

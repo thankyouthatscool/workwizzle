@@ -174,8 +174,7 @@ export const HoursWorkedSection = () => {
       <WeekSection>
         <Card
           style={{
-            marginHorizontal: DEFAULT_APP_PADDING,
-            marginBottom: DEFAULT_APP_PADDING,
+            margin: DEFAULT_APP_PADDING,
           }}
         >
           <Card.Content>
@@ -253,8 +252,7 @@ export const HoursWorkedSection = () => {
       <MonthSection>
         <Card
           style={{
-            marginHorizontal: DEFAULT_APP_PADDING,
-            marginBottom: DEFAULT_APP_PADDING,
+            margin: DEFAULT_APP_PADDING,
           }}
         >
           <Card.Content>
@@ -315,8 +313,7 @@ export const HoursWorkedSection = () => {
       <PhysicalYearSection>
         <Card
           style={{
-            marginHorizontal: DEFAULT_APP_PADDING,
-            marginBottom: DEFAULT_APP_PADDING,
+            margin: DEFAULT_APP_PADDING,
           }}
         >
           <Card.Content>

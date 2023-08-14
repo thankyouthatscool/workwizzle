@@ -1,11 +1,11 @@
+import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
-import { type FC, useCallback, useEffect, useState } from "react";
+import { getWeek } from "date-fns";
+import { useCallback, useEffect, useState, type FC } from "react";
 import { Dimensions, Pressable, ScrollView, View } from "react-native";
+import { LineChart } from "react-native-chart-kit";
 import { Button, IconButton, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
-import { getWeek } from "date-fns";
-import { LineChart } from "react-native-chart-kit";
 
 import { HoursWorkedSection } from "@components/HoursWorkedSection";
 import { useAppDispatch, useAppSelector } from "@hooks";
@@ -47,7 +47,7 @@ export const TouchedDayScreen: FC<TouchedDayScreenProps> = ({ navigation }) => {
     comment: DEFAULT_COMMENT,
   });
   const [isDefaultData, setIsDefaultData] = useState<boolean>(false);
-  const [isMoreDataExpanded, setIsMoreDataExpanded] = useState<boolean>(false);
+  const [isMoreDataExpanded, setIsMoreDataExpanded] = useState<boolean>(true);
   const [isStartEndExpanded, setIsStartEndExpanded] = useState<boolean>(false);
 
   const { databaseInstance: db, touchedDateInformation } = useAppSelector(
@@ -448,7 +448,7 @@ export const DataComponent = () => {
   const [topExpandedSections, setTopExpandedSections] = useState<{
     earnings: boolean;
     hoursWorked: boolean;
-  }>({ earnings: false, hoursWorked: false });
+  }>({ earnings: true, hoursWorked: true });
   const [weekData, setWeekData] = useState<TableData[]>([]);
   const [weekDays, setWeekDays] = useState<string[]>([]);
 
@@ -518,77 +518,6 @@ export const DataComponent = () => {
         </View>
       </Pressable>
       {topExpandedSections.hoursWorked && <HoursWorkedSection />}
-      {/* {topExpandedSections.hoursWorked && (
-        <ScrollView
-          horizontal
-          overScrollMode="never"
-          showsHorizontalScrollIndicator={false}
-          style={{ flexDirection: "row" }}
-        >
-          <View
-            style={{
-              width: WINDOW_WIDTH - DEFAULT_APP_PADDING * 4,
-            }}
-          >
-            <Text>
-              This week:{" "}
-              {weekData.reduce((acc, val) => {
-                return acc + parseFloat(val.hoursWorked);
-              }, 0)}{" "}
-              hour(s) worked
-            </Text>
-            {!!weekDays.length && <HoursWorkedSection />} */}
-      {/* // <LineChart
-              //   bezier
-              //   chartConfig={{
-              //     backgroundColor: "#e26a00",
-              //     backgroundGradientFrom: "#fb8c00",
-              //     backgroundGradientTo: "#ffa726",
-              //     color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              //     labelColor: (opacity = 1) =>
-              //       `rgba(255, 255, 255, ${opacity})`,
-              //     style: {
-              //       borderRadius: 16,
-              //     },
-              //     propsForDots: {
-              //       r: "6",
-              //       strokeWidth: "2",
-              //       stroke: "#ffa726",
-              //     },
-              //   }}
-              //   data={{
-                  // labels: weekDays.map((day) => `${day.split("-")[0]}`),
-                  // datasets: [
-                  //   {
-                  //     data: weekDays.map((day) => {
-                  //       const targetDay = weekData.find(
-                  //         (rec) => rec.dayId === day
-                  //       );
-
-                  //       if (!!targetDay) {
-                  //         return parseFloat(targetDay.hoursWorked);
-                  //       } else {
-                  //         return 0;
-                  //       }
-                  //     }), 
-                  //   },
-                  // ],
-              //   }}
-                // formatYLabel={(val) => parseInt(val).toString()}
-                // fromZero
-                // style={{
-                //   borderRadius: 16,
-                // }}
-              //   //
-              //   height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
-              //   width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 4}
-              // /> */}
-      {/* </View>
-          <View>
-            <Text>This Month - __ hour(s) worked</Text>
-          </View>
-        </ScrollView>
-      )} */}
       <Pressable
         onPress={() =>
           setTopExpandedSections((expandedSections) => ({
