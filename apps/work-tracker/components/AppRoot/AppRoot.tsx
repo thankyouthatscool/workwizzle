@@ -50,7 +50,7 @@ export const AppRoot = () => {
   return (
     <DrawerStack.Navigator
       initialRouteName="Home"
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, swipeEdgeWidth: 1 }}
     >
       <DrawerStack.Screen component={HomeScreen} name="Home" />
       <DrawerStack.Screen component={SettingsScreen} name="Settings" />

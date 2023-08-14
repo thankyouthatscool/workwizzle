@@ -1,4 +1,4 @@
-import { addDays, addWeeks, getWeek, monthsInQuarter } from "date-fns";
+import { addDays, getWeek, startOfWeek } from "date-fns";
 
 export const getCurrentDateInformation = () => {
   const dateInstance = new Date();
@@ -123,27 +123,45 @@ export const getDurationInHours = (duration: number) => {
   return [`${hours}`];
 };
 
+const monthNameLookupFromOne = (monthNumber: number) => {
+  return [
+    "",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ][monthNumber];
+};
+
 // Week Data
 export const getWeekData = (date: Date) => {
-  const dateWeekOfYear = getWeek(date, { weekStartsOn: 1 });
+  const weekOfYear = getWeek(date, { weekStartsOn: 1 });
 
-  const startOfYear = new Date(`${date.getFullYear()}-01-01`);
+  const weekStart = addDays(startOfWeek(date, { weekStartsOn: 1 }), 1);
 
-  const weekStart = addDays(addWeeks(startOfYear, dateWeekOfYear - 2), 1);
+  let daysOfTheWeek: Date[] = [];
 
-  let daysOfTheWeek: Date[] = [weekStart];
-
-  for (let i = 0; i < 6; i++) {
-    daysOfTheWeek = [...daysOfTheWeek, addDays(weekStart, i + 1)];
+  for (let i = 0; i < 7; i++) {
+    daysOfTheWeek = [...daysOfTheWeek, addDays(weekStart, i)];
   }
 
   const weekData = {
     daysOfTheWeek: daysOfTheWeek.map((date) => {
-      const [_, month, _date, year] = date.toDateString().split(" ");
+      const [year, month, _date] = date.toISOString().split("-");
 
-      return `${parseInt(_date)}-${monthShortToLong(month)}-${year}`;
+      return `${parseInt(_date)}-${monthNameLookupFromOne(
+        parseInt(month)
+      )}-${year}`;
     }),
-    weekOfYear: dateWeekOfYear,
+    weekOfYear,
   };
 
   return weekData;

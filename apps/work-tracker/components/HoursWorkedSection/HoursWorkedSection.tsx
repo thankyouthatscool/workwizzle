@@ -27,6 +27,10 @@ export const HoursWorkedSection = () => {
   } = useAppSelector(({ app }) => app);
 
   // Local State
+  const [allFinancialYearMonths, setAllFinancialYearMonths] = useState<
+    number[]
+  >([]);
+
   const [allMonthsHours, setAllMonthsHours] = useState<number[]>([]);
 
   const [monthWeeks, setMonthWeeks] = useState<string[]>([]);
@@ -109,6 +113,95 @@ export const HoursWorkedSection = () => {
             setAllMonthsHours(() => allMonthsMapped);
           }
         );
+
+        tx.executeSql(
+          `
+          SELECT * FROM dayTracker
+          WHERE monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+          OR monthId = ?
+        `,
+          [
+            "June",
+            "May",
+            "April",
+            "March",
+            "February",
+            "January",
+            "December",
+            "November",
+            "October",
+            "September",
+            "August",
+            "July",
+          ].map((month, idx) => {
+            // FIXME_: This logic here is all wrong.
+            if (idx <= 5) {
+              return `${month}-${touchedDateInformation?.TOUCHED_YEAR! + 1}`;
+            } else {
+              return `${month}-${touchedDateInformation?.TOUCHED_YEAR!}`;
+            }
+          }),
+          (_, { rows: { _array } }: { rows: { _array: TableData[] } }) => {
+            const mappedFinancialYear = _array.reduce(
+              (acc, { hoursWorked, monthId }) => {
+                if (!!acc[monthId]) {
+                  return {
+                    ...acc,
+                    [monthId]: acc[monthId] + parseFloat(hoursWorked),
+                  };
+                } else {
+                  return { ...acc, [monthId]: parseFloat(hoursWorked) };
+                }
+              },
+              {} as { [key: string]: number }
+            );
+
+            const allFinancialMapped = [
+              "June",
+              "May",
+              "April",
+              "March",
+              "February",
+              "January",
+              "December",
+              "November",
+              "October",
+              "September",
+              "August",
+              "July",
+            ]
+              .map((month, idx) => {
+                if (idx <= 5) {
+                  return `${month}-${
+                    touchedDateInformation?.TOUCHED_YEAR! + 1
+                  }`;
+                } else {
+                  return `${month}-${touchedDateInformation?.TOUCHED_YEAR!}`;
+                }
+              })
+              .map((month) => {
+                if (!!mappedFinancialYear[month]) {
+                  return mappedFinancialYear[month];
+                } else {
+                  return 0;
+                }
+              })
+              .slice()
+              .reverse();
+
+            setAllFinancialYearMonths(() => allFinancialMapped);
+          }
+        );
       },
       (err) => console.log(err),
       () => {
@@ -183,7 +276,6 @@ export const HoursWorkedSection = () => {
               {Array.from(new Set(weekData.map((d) => d.weekId.split("-")[0])))}
               )
             </Text>
-
             <Text>
               Total:{" "}
               {weekData.reduce((acc, val) => {
@@ -382,7 +474,74 @@ export const HoursWorkedSection = () => {
         )}
       </PhysicalYearSection>
       <FinancialYearSection>
-        <Text>Hours worked - This financial year</Text>
+        <Card style={{ margin: DEFAULT_APP_PADDING }}>
+          <Card.Content>
+            <Text variant="titleMedium">
+              For the {touchedDateInformation?.TOUCHED_YEAR}-
+              {touchedDateInformation?.TOUCHED_YEAR! + 1} financial year
+            </Text>
+            <Text>
+              Total:{" "}
+              {Math.round(
+                allFinancialYearMonths.reduce((acc, val) => acc + val, 0) * 100
+              ) / 100}{" "}
+              hour(s)
+            </Text>
+            <Text>
+              Average:{" "}
+              {Math.round(
+                (allFinancialYearMonths.reduce((acc, val) => acc + val, 0) /
+                  allFinancialYearMonths.length) *
+                  100
+              ) / 100}{" "}
+              hour(s)
+            </Text>
+          </Card.Content>
+        </Card>
+        {!!allFinancialYearMonths.length && (
+          <LineChart
+            bezier
+            chartConfig={{
+              backgroundColor: "#e26a00",
+              backgroundGradientFrom: "#fb8c00",
+              backgroundGradientTo: "#ffa726",
+              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              style: {
+                borderRadius: 16,
+              },
+              propsForDots: {
+                r: "6",
+                strokeWidth: "2",
+                stroke: "#ffa726",
+              },
+            }}
+            data={{
+              labels: [
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+              ],
+              datasets: [{ data: allFinancialYearMonths }],
+            }}
+            fromZero
+            style={{
+              borderRadius: 16,
+              paddingHorizontal: DEFAULT_APP_PADDING,
+            }}
+            height={WINDOW_WIDTH - DEFAULT_APP_PADDING * 2}
+            width={WINDOW_WIDTH - DEFAULT_APP_PADDING * 2}
+          />
+        )}
       </FinancialYearSection>
     </ScrollView>
   );
