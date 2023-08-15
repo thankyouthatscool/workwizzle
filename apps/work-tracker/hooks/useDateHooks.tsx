@@ -75,5 +75,15 @@ export const useDateHooks = () => {
     [SELECTED_DATE, SELECTED_MONTH, SELECTED_YEAR]
   );
 
-  return { changeSelectedDate };
+  const goToDate = useCallback((month: number, year: number) => {
+    dispatch(
+      setSelectedDateInformation({
+        SELECTED_DATE: 1,
+        SELECTED_MONTH: month,
+        SELECTED_YEAR: year,
+      })
+    );
+  }, []);
+
+  return { changeSelectedDate, goToDate };
 };

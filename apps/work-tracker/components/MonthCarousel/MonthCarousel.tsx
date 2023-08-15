@@ -1,13 +1,19 @@
-import { type FC, useEffect, useState } from "react";
-import { Dimensions, Pressable, View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { type FC, useEffect, useState, useRef } from "react";
+import { Dimensions, Pressable, View, VirtualizedList } from "react-native";
+import { Button, Text, Modal, Portal } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAppDispatch, useAppSelector, useDateHooks } from "@hooks";
 import { COLORS, DEFAULT_APP_PADDING } from "@theme";
 import { setDbMonthData, setTouchedDateInformation } from "@store";
 import type { MonthCarouselScreenProps } from "@types";
-import { getDayOfYear, getMonthInformation, monthNameLookup } from "@utils";
+import {
+  createDefaultTableSQLString,
+  getDayOfYear,
+  getMonthInformation,
+  monthNameLookup,
+  pl,
+} from "@utils";
 
 import { CalendarWrapper, WeekdayWrapper } from "./Styled";
 import {
@@ -23,6 +29,10 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
   // Hooks
   const dispatch = useAppDispatch();
 
+  // Refs
+  const virtualListRef = useRef<VirtualizedList<{ id: string }>>(null);
+
+  // Global State
   const {
     currentDateInformation: {
       CURRENT_DATE,
@@ -37,9 +47,14 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
     selectedDateInformation: { SELECTED_MONTH, SELECTED_YEAR },
   } = useAppSelector(({ app }) => app);
 
-  const { changeSelectedDate } = useDateHooks();
+  const { changeSelectedDate, goToDate } = useDateHooks();
 
   // Local State
+  const [isYearMonthPickerModalOpen, setIsYearMonthPickerModalOpen] =
+    useState<boolean>(false);
+  const [modalSelectedMonthIndex, setModalSelectedMonthIndex] =
+    useState<number>(0);
+  const [modalSelectedYear, setModalSelectedYear] = useState(CURRENT_YEAR);
   const [
     { firstDayIndex, lastDayIndex, monthNameLong, numberOfDays },
     setSelectedMonthInformation,
@@ -77,13 +92,116 @@ export const MonthCarousel: FC<MonthCarouselScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
-      <Text>
+      <Portal>
+        <Modal
+          onDismiss={() => setIsYearMonthPickerModalOpen(() => false)}
+          style={{ alignItems: "center" }}
+          visible={isYearMonthPickerModalOpen}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderRadius: 5,
+              padding: DEFAULT_APP_PADDING,
+              height: WINDOW_WIDTH - DEFAULT_APP_PADDING * 2,
+              width: WINDOW_WIDTH - DEFAULT_APP_PADDING * 2,
+              flexDirection: "row",
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <VirtualizedList
+                showsVerticalScrollIndicator={false}
+                getItem={(_, idx) =>
+                  [
+                    { id: "January", idx: 0 },
+                    { id: "February", idx: 1 },
+                    { id: "March", idx: 2 },
+                    { id: "April", idx: 3 },
+                    { id: "May", idx: 4 },
+                    { id: "June", idx: 5 },
+                    { id: "July", idx: 6 },
+                    { id: "August", idx: 7 },
+                    { id: "September", idx: 8 },
+                    { id: "October", idx: 9 },
+                    { id: "November", idx: 10 },
+                    { id: "December", idx: 11 },
+                  ][idx]
+                }
+                getItemCount={() => 12}
+                keyExtractor={({ id }) => id}
+                renderItem={({ index, item: { id, idx } }) => (
+                  <Pressable
+                    onPress={() => setModalSelectedMonthIndex(() => idx)}
+                  >
+                    <Text
+                      style={{
+                        color:
+                          modalSelectedMonthIndex === index ? "green" : "black",
+                      }}
+                    >
+                      {id}
+                    </Text>
+                  </Pressable>
+                )}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <VirtualizedList
+                showsVerticalScrollIndicator={false}
+                getItem={(_, idx) => ({ id: `${CURRENT_YEAR - 5 + idx}` })}
+                getItemCount={() => 11}
+                keyExtractor={({ id }) => id}
+                overScrollMode="never"
+                renderItem={({ item: { id } }) => (
+                  <Pressable
+                    onPress={() => {
+                      setModalSelectedYear(() => parseInt(id));
+                    }}
+                  >
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        color:
+                          modalSelectedYear === parseInt(id)
+                            ? "green"
+                            : "black",
+                      }}
+                      variant="headlineLarge"
+                    >
+                      {id}
+                    </Text>
+                  </Pressable>
+                )}
+              />
+              <View style={{ marginTop: DEFAULT_APP_PADDING }}>
+                <Button
+                  mode="contained"
+                  onPress={() => {
+                    setIsYearMonthPickerModalOpen(() => false);
+
+                    goToDate(modalSelectedMonthIndex, modalSelectedYear);
+                  }}
+                >
+                  Go To
+                </Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </Portal>
+      <Text style={{ textAlign: "center" }} variant="headlineMedium">
         {CURRENT_WEEK_DAY_LONG}, {CURRENT_MONTH_LONG} {CURRENT_DATE},{" "}
         {CURRENT_YEAR}
       </Text>
-      <Text>
-        {monthNameLookup(SELECTED_MONTH)} {SELECTED_YEAR}
-      </Text>
+      <Pressable
+        onPress={() => {
+          setIsYearMonthPickerModalOpen(() => true);
+        }}
+      >
+        <Text style={{ textAlign: "center" }} variant="titleLarge">
+          {monthNameLookup(SELECTED_MONTH)} {SELECTED_YEAR}
+        </Text>
+      </Pressable>
       <WeekdayWrapper>
         {["M", "T", "W", "T", "F", "S", "S"].map((weekDayLetter, idx) => (
           <View

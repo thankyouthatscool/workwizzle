@@ -7,7 +7,13 @@ import { LineChart } from "react-native-chart-kit";
 import { useAppSelector } from "@hooks";
 import { DEFAULT_APP_PADDING } from "@theme";
 import type { TableData } from "@types";
-import { getMoreMonthData, getWeekData, monthNameLookup, pl } from "@utils";
+import {
+  getFinancialYear,
+  getMoreMonthData,
+  getWeekData,
+  monthNameLookup,
+  pl,
+} from "@utils";
 
 import {
   FinancialYearSection,
@@ -144,13 +150,17 @@ export const HoursWorkedSection = () => {
             "August",
             "July",
           ].map((month, idx) => {
-            // FIXME: This logic here is all wrong.
-            // TODO: Need to use both the TOUCHED_MONTH AND TOUCHED_YEAR
-            // TODO: in combination to determine what financial year I'm in
+            const [lowerPhysicalYear, upperPhysicalYear] = getFinancialYear(
+              monthNameLookup(touchedDateInformation?.TOUCHED_MONTH!),
+              touchedDateInformation?.TOUCHED_YEAR!
+            )
+              .split("-")
+              .map((year) => parseInt(year));
+
             if (idx <= 5) {
-              return `${month}-${touchedDateInformation?.TOUCHED_YEAR! + 1}`;
+              return `${month}-${upperPhysicalYear}`;
             } else {
-              return `${month}-${touchedDateInformation?.TOUCHED_YEAR!}`;
+              return `${month}-${lowerPhysicalYear}`;
             }
           }),
           (_, { rows: { _array } }: { rows: { _array: TableData[] } }) => {
@@ -272,6 +282,7 @@ export const HoursWorkedSection = () => {
             margin: DEFAULT_APP_PADDING,
           }}
         >
+          {/* TODO: Short month names, otherwise we'll go over two lines. */}
           <Card.Content>
             <Text variant="titleMedium">
               For the week starting {weekDays[0]} (#

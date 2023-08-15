@@ -1,4 +1,4 @@
-import { getMoreMonthData, getWeekData } from "./dates";
+import { getFinancialYear, getMoreMonthData, getWeekData } from "./dates";
 
 describe("getWeekData", () => {
   it("returns the correct week information for 2023-08-13", () => {
@@ -46,5 +46,26 @@ describe("getMoreMonthInformation", () => {
 
     expect(res.monthDaysArray.length).toEqual(31);
     expect(res.weekNumbers).toEqual(["32", "33", "34", "35", "36"]);
+  });
+});
+
+// Financial Year
+describe("getFinancialYear", () => {
+  it("returns the correct financial year for August, 2023", () => {
+    const res = getFinancialYear("August", 2023);
+
+    expect(res).toEqual("2023-2024");
+  });
+
+  it("returns the correct financial year for June, 2023", () => {
+    const res = getFinancialYear("June", 2023);
+
+    expect(res).toEqual("2022-2023");
+  });
+
+  it("returns the correct financial year for January, 2024", () => {
+    const res = getFinancialYear("January", 2024);
+
+    expect(res).toEqual("2023-2024");
   });
 });

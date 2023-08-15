@@ -224,3 +224,16 @@ export const getMoreMonthData = (year: number, month: number) => {
 
   return { monthDaysArray, weeksDays, weekNumbers: Object.keys(weeksDays) };
 };
+
+// Financial Year
+export const getFinancialYear = (month: string, year: number) => {
+  if (
+    ["July", "August", "September", "October", "November", "December"].includes(
+      month
+    )
+  ) {
+    return `${year}-${year + 1}`;
+  } else {
+    return `${year - 1}-${year}`;
+  }
+};
